@@ -1,0 +1,17 @@
+{
+  "name": "docfork",
+  "owner": {
+    "name": "Docfork",
+    "email": "support@docfork.com"
+  },
+  "metadata": {
+    "description": "Docfork plugins for Claude Code — documentation search for AI agents"
+  },
+  "plugins": [
+    {
+      "name": "docfork",
+      "source": "./plugins/claude/docfork",
+      "description": "Up-to-date and secure docs search for AI agents. Search 10,000+ libraries and lock your agent to your stack with Cabinets."
+    }
+  ]
+}
