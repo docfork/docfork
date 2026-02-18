@@ -1,9 +1,24 @@
 ---
 title: Claude Code
-description: Install Docfork MCP in Claude Code
+description: Install Docfork MCP and plugins in Claude Code
 ---
 
-Run this command. See [Claude Code MCP docs](https://docs.anthropic.com/en/docs/claude-code/mcp) for more info.
+## Plugin Marketplace
+
+The Docfork plugin bundles MCP, skills, agents, and commands for documentation search. We're not in the official Anthropic marketplace yet—install from our GitHub marketplace:
+
+```sh theme={null}
+/plugin marketplace add docfork/docfork
+/plugin install docfork@docfork
+```
+
+The plugin includes: `docfork:query_docs` and `docfork:fetch_url` MCP tools, the `/docfork:docs` command, `docfork-docs` skill, and `docs-researcher` agent. See the [plugin README](https://github.com/docfork/docfork/tree/main/plugins/claude/docfork) for details.
+
+---
+
+## MCP-only installation
+
+If you only need the MCP server without the plugin bundle, run one of the commands below. See [Claude Code MCP docs](https://docs.anthropic.com/en/docs/claude-code/mcp) for more info.
 
 #### Local Server Connection
 

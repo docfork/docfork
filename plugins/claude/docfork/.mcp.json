@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "docfork": {
+      "type": "http",
+      "url": "https://mcp.docfork.com/mcp"
+    }
+  }
+}
