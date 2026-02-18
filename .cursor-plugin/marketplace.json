@@ -1,0 +1,14 @@
+{
+  "name": "docfork",
+  "owner": {
+    "name": "Docfork",
+    "email": "support@docfork.com"
+  },
+  "plugins": [
+    {
+      "name": "docfork",
+      "source": "plugins/cursor/docfork",
+      "description": "Up-to-date and secure docs search for AI agents. Search 10,000+ libraries and lock your agent to your stack with Cabinets."
+    }
+  ]
+}
