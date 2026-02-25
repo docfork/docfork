@@ -1,0 +1,96 @@
+---
+title: Rate limits
+description: API rate limits and how to work with them.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Docfork enforces rate limits to keep the API stable for all users. If you send many requests in quick succession, you may receive `429` responses. Authenticated requests use higher limits than anonymous traffic.
+
+## Limits by user type
+
+| User type | Search | Regular | Monthly | Rate key |
+| --------- | ------ | ------- | ------- | -------- |
+| **Anonymous** | 20/min | 120/min | 500/mo | IP address |
+| **Authenticated** (API keys) | 60/min | 300/min | 1,000/mo | organization |
+| **Marketing site** | 60/min | 300/min | None | End-user IP |
+
+- **Search** — `/v1/search` and MCP `query_docs` calls. More expensive to run.
+- **Regular** — Other API routes (like `/v1/read`) and MCP `fetch_url`.
+- **Monthly** — Rolling 30-day window. Resets continuously.
+
+Rate limits are enforced per organization for authenticated requests, so all API keys in the same workspace share the same limits.
+
+<Callout type="info" title="Higher limits">
+  Need more? [Contact us](mailto:support@docfork.com) — plan upgrades and higher limits are coming soon.
+</Callout>
+
+## Response headers
+
+Successful responses include rate limit headers:
+
+| Header | Description |
+| ------ | ----------- |
+| `RateLimit-Limit` | Max requests per window |
+| `RateLimit-Remaining` | Requests left in current window |
+| `RateLimit-Reset` | Unix timestamp when the window resets |
+| `X-Monthly-RateLimit-Limit` | Monthly limit (when applicable) |
+| `X-Monthly-RateLimit-Remaining` | Monthly requests left |
+| `X-Monthly-RateLimit-Reset` | Unix timestamp when monthly window resets |
+
+When a limit is exceeded, responses include `Retry-After` (seconds until reset).
+
+## Rate-limited responses
+
+Requests that exceed a limit return `429 Too Many Requests` with a JSON body:
+
+```json
+{
+  "error": "Too Many Requests",
+  "message": "Rate limit exceeded. Please try again later."
+}
+```
+
+For anonymous search limits:
+
+```json
+{
+  "error": "Too Many Requests",
+  "message": "Search is limited to 20/min for anonymous users. Create a free account for higher limits at docfork.com."
+}
+```
+
+For monthly limits:
+
+```json
+{
+  "error": "Too Many Requests",
+  "message": "Monthly rate limit exceeded. Create a free account at docfork.com for higher limits."
+}
+```
+
+## Handling rate limits
+
+1. **Watch for `429`** — Implement retries when you receive this status.
+2. **Use `Retry-After`** — Wait at least this many seconds before retrying.
+3. **Exponential backoff** — Add randomness to avoid thundering herd when many clients retry at once.
+4. **Authenticate** — Use an API key for higher limits. See [Authentication](/core/authentication).
+
+For MCP clients, consider a token-bucket style limiter on the client to stay under limits.
+
+## Anonymous vs authenticated
+
+Anonymous requests (no `Authorization` or `DOCFORK_API_KEY` header) use the lowest limits.
+
+<Callout type="info" title="Get higher limits">
+  Add an API key for 3× higher per-minute limits and 2× higher monthly limits. [Create a free
+  account](https://app.docfork.com/signup) and add your key to the `DOCFORK_API_KEY` header.
+</Callout>
+
+| Limit | Anonymous | Authenticated |
+| ----- | --------- | ------------- |
+| Search | 20/min | 60/min |
+| Regular | 120/min | 300/min |
+| Monthly | 500/mo | 1,000/mo |
+
+See [Usage](/core/usage) to track your workspace consumption.
