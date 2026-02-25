@@ -10,7 +10,8 @@ The Jobs page tracks every indexing run for your private libraries. Use it to mo
 Go to [app.docfork.com/jobs](https://app.docfork.com/jobs) to view your jobs.
 
 <Callout type="info">
-  Jobs only exist for private libraries. Public libraries in the Docfork catalogue are indexed automatically — no job is created for them in your workspace.
+  Jobs only exist for private libraries. Public libraries in the Docfork catalogue are indexed
+  automatically — no job is created for them in your workspace.
 </Callout>
 
 ## When a job is created
@@ -24,13 +25,13 @@ A job is created when you:
 
 Each job moves through a pipeline from queued to completion:
 
-| Status | Meaning |
-| ------ | ------- |
-| **Queued** | Job is waiting for a worker to pick it up |
-| **Indexing** | Worker is cloning the repository and extracting documentation |
-| **Uploading** | Chunks are being embedded and written to the search index |
-| **Completed** | All chunks are indexed and available for search |
-| **Failed** | Job encountered an error — see the job detail for specifics |
+| Status        | Meaning                                                       |
+| ------------- | ------------------------------------------------------------- |
+| **Queued**    | Job is waiting for a worker to pick it up                     |
+| **Indexing**  | Worker is cloning the repository and extracting documentation |
+| **Uploading** | Chunks are being embedded and written to the search index     |
+| **Completed** | All chunks are indexed and available for search               |
+| **Failed**    | Job encountered an error — see the job detail for specifics   |
 
 ## Filtering jobs
 
