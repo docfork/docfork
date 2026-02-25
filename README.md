@@ -202,20 +202,22 @@ Implement a secure authentication flow using Better Auth and Supabase. use docfo
 Add a rule so Docfork stays active — skip the prompt suffix.
 
 > [!NOTE]
-> **[Add Rule to Cursor (One-Click)](<https://cursor.com/link/rule?name=docfork-policy&text=You+have+access+to+the+docfork+MCP+server.+To+ensure+the+code+you+write+is+accurate+and+up-to-date%2C+you+must+follow+these+requirements%3A%0A%0A1.+Auto-Invoke%3A+Always+use+%60query_docs%60+when+asked+for+library+implementation%2C+API+setup%2C+or+debugging.%0A2.+Context+Strategy%3A%0A+++-+Search%3A+Call+%60query_docs%60+and+review+the+content+chunks+in+the+results.%0A+++-+Fetch%3A+Only+call+%60fetch_url%60+if+the+chunks+are+incomplete+or+you+need+the+full+file+context+for+a+complex+implementation.%0A+++-+Identity%3A+%60library%60+is+required.+Start+with+a+best-guess+library+name+(e.g.%2C+%60react%60).+Once+you+identify+the+exact+repo%2C+always+switch+%60library%60+to+the+exact+%60owner%2Frepo%60+(e.g.%2C+%60facebook%2Freact%60)+for+follow-up+queries.+If+you+have+%60%2Fowner%2Frepo%60%2C+remove+the+leading+slash.%0A%0AIf+you+are+unsure+of+a+library%27s+latest+syntax%2C+search+with+docfork+first.>)**
+> **[Add Rule to Cursor (One-Click)](<https://cursor.com/link/rule?name=docfork-policy&text=When%20writing%20or%20debugging%20code%20that%20involves%20third-party%20libraries%2C%20frameworks%2C%20or%20APIs%2C%20use%20Docfork%20MCP%20%60query_docs%60%20and%20%60fetch_url%60%20tools%20rather%20than%20relying%20on%20training%20data.%0A%0A%2A%2ATwo%20defaults%20to%20follow%20every%20time%3A%2A%2A%0A-%20Start%20%60library%60%20with%20a%20short%20name%20or%20keyword%20%28e.g.%2C%20%60nextjs%60%2C%20%60zod%60%29.%20Use%20the%20%60owner%2Frepo%60%20from%20the%20result%20URL%20for%20follow-up%20calls%2C%20never%20guess%20it%20upfront.%0A-%20After%20finding%20a%20relevant%20result%2C%20call%20%60fetch_url%60%20to%20get%20the%20full%20content.%20Search%20results%20are%20summaries%20only.%0A%0ASkip%20Docfork%20when%3A%0A-%20Language%20built-ins%2C%20general%20algorithms%2C%20syntax%20stable%20across%20versions%0A-%20Code%20or%20docs%20the%20user%20has%20already%20provided%20in%20context%0A%0AWhen%20uncertain%2C%20default%20to%20using%20Docfork.>)**
 
 Copy rule:
 
 ```markdown title=".cursor/rules/docfork-policy.md"
-You have access to the docfork MCP server. To ensure the code you write is accurate and up-to-date, you must follow these requirements:
+When writing or debugging code that involves third-party libraries, frameworks, or APIs, use Docfork MCP `query_docs` and `fetch_url` tools rather than relying on training data.
 
-1. Auto-Invoke: Always use `query_docs` when asked for library implementation, API setup, or debugging.
-2. Context Strategy:
-   - Search: Call `query_docs` and review the content chunks in the results.
-   - Fetch: Only call `fetch_url` if the chunks are incomplete or you need the full file context for a complex implementation.
-   - Identity: `library` is required. Start with a best-guess library name (e.g., `react`). Once you identify the exact repo, always switch `library` to the exact `owner/repo` (e.g., `facebook/react`) for follow-up queries.
+**Two defaults to follow every time:**
+- Start `library` with a short name or keyword (e.g., `nextjs`, `zod`). Use the `owner/repo` from the result URL for follow-up calls, never guess it upfront.
+- After finding a relevant result, call `fetch_url` to get the full content. Search results are summaries only.
 
-If you are unsure of a library's latest syntax, search with docfork first.
+Skip Docfork when:
+- Language built-ins, general algorithms, syntax stable across versions
+- Code or docs the user has already provided in context
+
+When uncertain, default to using Docfork.
 ```
 
 Now your AI fetches the latest docs automatically:

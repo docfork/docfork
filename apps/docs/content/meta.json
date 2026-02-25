@@ -5,7 +5,10 @@
     "get-started/quick-start",
     "get-started/best-practices",
     "---Core---",
+    "core/libraries",
     "core/cabinets",
+    "core/jobs",
+    "core/usage",
     "core/authentication",
     "core/teams",
     "---Clients---",
@@ -13,6 +16,8 @@
     "clients/claude-code",
     "clients/opencode",
     "clients/overview",
+    "---Integrations---",
+    "integrations/github",
     "---Comparisons---",
     "docfork-vs-context7",
     "---Troubleshooting---",
@@ -20,7 +25,7 @@
     "troubleshooting/platform-specific",
     "troubleshooting/client-specific",
     "troubleshooting/debugging",
-    "---Security---",
-    "security"
+    "---Account---",
+    "rate-limits"
   ]
 }

@@ -5,9 +5,11 @@ description: Key differences between popular docs search MCP servers.
 
 | Feature                  | **Docfork**                                | Context7                           |
 | ------------------------ | ------------------------------------------ | ---------------------------------- |
-| Stack scoping (Cabinets) | **Project-level**, free                    | Org-wide allowlist                 |
+| Stack scoping (Cabinets) | **Project-level** and **Org-level**, free  | Org-wide allowlist                 |
 | Team collaboration       | **Free:** shared Cabinets & API keys       | Pro plan ($10/seat)                |
-| Content                  | **Full docs** + `fetch_url` for full pages | Documentation sections             |
+| Private repositories     | **Free**: GitHub App or PAT (beta)         | Pro plan required                  |
+| Authentication           | **API keys + OAuth 2.0**                   | API keys                           |
+| Content                  | **Full docs** + `fetch_url` for full pages | Code snippets + Summarizies        |
 | Approach                 | **Search + read** (iterative)              | Resolve → query (two-step)         |
 | Tools                    | `query_docs`, `fetch_url`                  | `resolve-library-id`, `query-docs` |
 | Token optimization       | **Adaptive** 500–100k tokens               | Fixed \~3k tokens                  |

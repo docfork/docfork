@@ -1,0 +1,44 @@
+---
+title: Usage
+description: Track plan usage and limits for your workspace.
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+The Usage page shows how your workspace is consuming its monthly allocation and how close you are to each plan limit.
+
+Go to [app.docfork.com/usage](https://app.docfork.com/usage) to view your usage.
+
+## Monthly usage
+
+The **Monthly usage** card tracks rate-limited resources that reset each month.
+
+### API requests
+
+All MCP tool calls (`query_docs`, `fetch_url`) and direct API requests made by your workspace API keys count toward this limit. The counter resets on a rolling 30-day window.
+
+See [Rate limits](/rate-limits) for the full breakdown by plan.
+
+### Indexing budget
+
+Source file bytes embedded during private library indexing. The budget resets monthly.
+
+Re-indexing an unchanged repository doesn't consume budget — Docfork skips files whose content hasn't changed since the last run. Only new or modified files are counted.
+
+## Plan limits
+
+The **Plan limits** card shows object caps that don't reset — they reflect your current workspace state against your plan's maximum.
+
+| Limit                 | What it counts                                            |
+| --------------------- | --------------------------------------------------------- |
+| **Private libraries** | Libraries indexed from your own repositories              |
+| **Cabinets**          | Named doc collections scoped to your projects             |
+| **API keys**          | Active keys for authenticating MCP and API requests       |
+| **Integrations**      | Connected GitHub accounts for private repository indexing |
+
+Your current plan name is shown in the section header. During beta, all workspaces are provisioned with the same allocation.
+
+<Callout type="info">
+  Need higher limits? [Contact us](mailto:support@docfork.com) — billing and plan upgrades are
+  coming soon.
+</Callout>
