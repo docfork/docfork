@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@lucide/lab": "^0.1.2",
-    "@takumi-rs/core": "^0.67.3",
+    "@takumi-rs/core": "^0.69.5",
     "@takumi-rs/image-response": "^0.67.3",
     "@vercel/analytics": "^1.6.1",
     "fumadocs-core": "16.6.0",
