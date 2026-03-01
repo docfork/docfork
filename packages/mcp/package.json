@@ -43,7 +43,7 @@
   },
   "homepage": "https://github.com/docfork/docfork#readme",
   "dependencies": {
-    "@modelcontextprotocol/inspector": "0.20.0",
+    "@modelcontextprotocol/inspector": "0.21.1",
     "@modelcontextprotocol/sdk": "1.26.0",
     "dotenv": "^17.2.4",
     "jose": "^6.1.3",
