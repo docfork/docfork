@@ -14,4 +14,4 @@ Fetch current documentation using Docfork and return a direct answer with runnab
 /docfork:docs zod nested object validation
 ```
 
-Use `docfork:query_docs` with the library name, extract `owner/repo` from result URLs for follow-up calls, then `docfork:fetch_url` for full content. Search results are summaries only.
+Use `docfork:search_docs` with the library name, extract `owner/repo` from result URLs for follow-up calls, then `docfork:fetch_doc` for full content. Search results are summaries only.

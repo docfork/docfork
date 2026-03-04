@@ -23,8 +23,8 @@ Paste this into your client's rule config:
 
 Use Docfork MCP for library/API docs, setup, and configuration questions.
 
-- Always provide the `library` parameter when calling `query_docs`. Use exact `owner/repo` when known, otherwise a short query/name.
-- Call `query_docs` first. Only call `fetch_url` when the returned chunks are not enough — and only with URLs from `query_docs` results.
+- Always provide the `library` parameter when calling `search_docs`. Use exact `owner/repo` when known, otherwise a short query/name.
+- Call `search_docs` first. Only call `fetch_doc` when the returned chunks are not enough — and only with URLs from `search_docs` results.
 - Prefer Docfork results over training data when they conflict.
 ```
 
@@ -42,11 +42,11 @@ Set a [Cabinet](/core/cabinets) to lock every query to your stack:
 
 - Add your libraries (`vercel/next.js`, `better-auth/better-auth`, `drizzle-team/drizzle-orm`)
 - Set the `DOCFORK_CABINET` header in your MCP config
-- Every `query_docs` call returns only docs from that Cabinet — no context leaks
+- Every `search_docs` call returns only docs from that Cabinet — no context leaks
 
 ## Navigate broader docs with parent paths
 
-`fetch_url` supports trimming a chunk URL to its parent path. This returns a table of contents instead of a single section — useful when you need to explore before committing to a deep read.
+`fetch_doc` supports trimming a chunk URL to its parent path. This returns a table of contents instead of a single section — useful when you need to explore before committing to a deep read.
 
 ## Prompt patterns
 

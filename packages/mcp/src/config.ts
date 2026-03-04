@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { parseArgs } from "node:util";
 import { AsyncLocalStorage } from "async_hooks";
+import { SERVER_VERSION } from "./lib/constants.js";
 
 // Load environment variables from .env file if present
 // Suppress dotenv output to prevent stdout pollution in MCP stdio transport
@@ -68,7 +69,7 @@ export function getServerConfig(): ServerConfig {
   return {
     name: "Docfork",
     description: "Gets the latest documentation and code examples for any library.",
-    version: "2.0.0",
+    version: SERVER_VERSION,
     port: parseEnvInt("PORT", 3000),
     transport: (process.env.MCP_TRANSPORT || "stdio") as ServerConfig["transport"],
   };

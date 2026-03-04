@@ -14,8 +14,8 @@ Up-to-date and secure docs search for AI agents. Search 10,000+ libraries and lo
 
 | Tool                 | Description                                                                                                                                      |
 | :------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docfork:query_docs` | Search documentation across libraries. Returns chunks with titles, descriptions, and URLs                                                        |
-| `docfork:fetch_url`  | Fetch full markdown content from a `query_docs` result URL, or strip the anchor and filename to get a table of contents for the parent directory |
+| `docfork:search_docs` | Search documentation across libraries. Returns chunks with titles, descriptions, and URLs                                                        |
+| `docfork:fetch_doc`   | Fetch full markdown content from a `search_docs` result URL, or strip the anchor and filename to get a table of contents for the parent directory |
 
 ### Skills
 
