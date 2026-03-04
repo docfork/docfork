@@ -5,7 +5,7 @@ description: Retrieves up-to-date documentation for any third-party library, fra
 
 ## Workflow
 
-### 1. Search — `docfork:query_docs`
+### 1. Search — `docfork:search_docs`
 
 **library**: Start with a short name or keyword (e.g., `nextjs`, `react router`) — this triggers multi-library search with server-side reranking. Once a result is returned, extract the `owner/repo` from its URL and use that exact form for any follow-up calls to pin to the verified repository.
 
@@ -15,9 +15,9 @@ Each result returns a `title`, `description`, and `url`. Prefer canonical/offici
 
 > **3 calls maximum across the entire request.**
 
-### 2. Fetch - `docfork:fetch_url`
+### 2. Fetch - `docfork:fetch_doc`
 
-Search results are summaries. **Call `fetch_url` to get the actual content - this is the default next step after a relevant result, not a last resort.**
+Search results are summaries. **Call `fetch_doc` to get the actual content - this is the default next step after a relevant result, not a last resort.**
 
 Two URL modes, both derived from search result URLs:
 

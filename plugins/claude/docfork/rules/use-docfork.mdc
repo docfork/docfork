@@ -3,11 +3,11 @@ description: Use Docfork to retrieve up-to-date library and API documentation in
 alwaysApply: true
 ---
 
-When writing or debugging code that involves third-party libraries, frameworks, or APIs, use `docfork:query_docs` rather than relying on training data.
+When writing or debugging code that involves third-party libraries, frameworks, or APIs, use `docfork:search_docs` rather than relying on training data.
 
 **Two defaults to follow every time:**
 - Start `library` with a short name or keyword (e.g., `nextjs`, `zod`). Use the `owner/repo` from the result URL for follow-up calls, never guess it upfront.
-- After finding a relevant result, call `docfork:fetch_url` to get the full content. Search results are summaries only.
+- After finding a relevant result, call `docfork:fetch_doc` to get the full content. Search results are summaries only.
 
 Skip Docfork when:
 - Language built-ins, general algorithms, syntax stable across versions

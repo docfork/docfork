@@ -15,8 +15,8 @@ Docfork enforces rate limits to keep the API stable for all users. If you send m
 | **Authenticated** (API keys) | 60/min | 300/min | 1,000/mo | organization |
 | **Marketing site**           | 60/min | 300/min | None     | End-user IP  |
 
-- **Search** — `/v1/search` and MCP `query_docs` calls. More expensive to run.
-- **Regular** — Other API routes (like `/v1/read`) and MCP `fetch_url`.
+- **Search** — `/v1/search` and MCP `search_docs` calls. More expensive to run.
+- **Regular** — Other API routes (like `/v1/read`) and MCP `fetch_doc`.
 - **Monthly** — Rolling 30-day window. Resets continuously.
 
 Rate limits are enforced per organization for authenticated requests, so all API keys in the same workspace share the same limits.
