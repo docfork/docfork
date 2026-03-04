@@ -1,4 +1,4 @@
-import { API_URL } from "./index.js";
+import { API_URL } from "../lib/constants.js";
 import { generateHeaders } from "./headers.js";
 import { DocforkAuthConfig } from "../config.js";
 
