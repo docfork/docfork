@@ -110,12 +110,12 @@ Usage:
       const results = response.sections
         .map((section, i) => {
           const rawTitle = section.title.replace(/^page\s*—\s*/, "");
-          const title = rawTitle.length > MAX_TITLE_LEN
-            ? rawTitle.slice(0, MAX_TITLE_LEN - 1) + "…"
-            : rawTitle;
-          const desc = section.description.length > MAX_DESC_LEN
-            ? section.description.slice(0, MAX_DESC_LEN - 1) + "…"
-            : section.description;
+          const title =
+            rawTitle.length > MAX_TITLE_LEN ? rawTitle.slice(0, MAX_TITLE_LEN - 1) + "…" : rawTitle;
+          const desc =
+            section.description.length > MAX_DESC_LEN
+              ? section.description.slice(0, MAX_DESC_LEN - 1) + "…"
+              : section.description;
           return `[${i + 1}] ${title} — ${desc}\n    ${section.url}`;
         })
         .join("\n\n");
