@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-03-04 — MCP tools v5
+
+### Added
+
+- `lib/constants.ts` — centralizes `SERVER_VERSION` (from package.json) and `API_URL`
+
+### Changed
+
+- **Tool renames**: `query_docs` → `search_docs`, `fetch_url` → `fetch_doc`
+- Expanded server instructions with explicit use cases (API usage, migrations, framework setup, SDK methods)
+- Clearer tool descriptions and workflow guidance (search → fetch_doc on result URLs)
+- Simplified search result format: header with result count, numbered results with truncated titles/descriptions
+- Server version and config now read from constants instead of hardcoded values
+
 ## [2.0.0] - 2026-02-12 — Sharper tools
 
 ### Added
