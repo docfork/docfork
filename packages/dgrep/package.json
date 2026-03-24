@@ -1,0 +1,34 @@
+{
+  "name": "dgrep",
+  "version": "0.1.0",
+  "description": "Docfork documentation grounding CLI",
+  "type": "module",
+  "bin": {
+    "dgrep": "dist/bin.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "obuild src/bin.ts:dist",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\" --fix --quiet --max-warnings=-1",
+    "lint:check": "eslint \"src/**/*.ts\" --quiet --max-warnings=-1",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@clack/prompts": "^0.9",
+    "@types/node": "25.2.3",
+    "@types/yargs": "^17.0.35",
+    "gray-matter": "^4",
+    "obuild": "latest",
+    "picocolors": "^1",
+    "vitest": "^3",
+    "yargs": "^18"
+  },
+  "homepage": "https://github.com/docfork/docfork#readme"
+}
