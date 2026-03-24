@@ -5,7 +5,10 @@ node_modules/
 key.pem
 .cursor/
 .docfork/
-.claude/
+.claude/settings.local.json
+.claude/plans/
+.claude/worktrees/
+.claude/bridge/
 .env*
 
 # turborepo
