@@ -1,0 +1,49 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+beforeEach(() => {
+  vi.unstubAllEnvs();
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
+describe("resolveAuth", () => {
+  it("returns env var when DOCFORK_API_KEY is set", async () => {
+    vi.stubEnv("DOCFORK_API_KEY", "docf_from_env");
+    vi.stubEnv("DOCFORK_CABINET", "my-cabinet");
+
+    const { resolveAuth } = await import("../../src/lib/auth.js");
+    const auth = await resolveAuth();
+
+    expect(auth.apiKey).toBe("docf_from_env");
+    expect(auth.cabinet).toBe("my-cabinet");
+  });
+
+  it("prefers env var over flag", async () => {
+    vi.stubEnv("DOCFORK_API_KEY", "docf_from_env");
+
+    const { resolveAuth } = await import("../../src/lib/auth.js");
+    const auth = await resolveAuth("docf_from_flag");
+
+    expect(auth.apiKey).toBe("docf_from_env");
+  });
+
+  it("uses flag when no env var", async () => {
+    vi.stubEnv("DOCFORK_API_KEY", "");
+
+    const { resolveAuth } = await import("../../src/lib/auth.js");
+    const auth = await resolveAuth("docf_from_flag");
+
+    expect(auth.apiKey).toBe("docf_from_flag");
+  });
+
+  it("returns empty when nothing configured", async () => {
+    vi.stubEnv("DOCFORK_API_KEY", "");
+
+    const { resolveAuth } = await import("../../src/lib/auth.js");
+    const auth = await resolveAuth();
+
+    expect(auth.apiKey).toBeUndefined();
+  });
+});

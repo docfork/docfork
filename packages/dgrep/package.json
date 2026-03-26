@@ -25,6 +25,7 @@
     "@types/node": "25.2.3",
     "@types/yargs": "^17.0.35",
     "gray-matter": "^4",
+    "msw": "^2.12.14",
     "obuild": "latest",
     "picocolors": "^1",
     "vitest": "^3",
