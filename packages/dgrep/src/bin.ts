@@ -34,14 +34,36 @@ async function main() {
       "search <query>",
       "Search documentation",
       (yargs) => {
-        return yargs.positional("query", {
-          type: "string",
-          describe: "Search query",
-        });
+        return yargs
+          .positional("query", {
+            type: "string",
+            describe: "Search query",
+          })
+          .option("library", {
+            alias: "l",
+            type: "string",
+            array: true,
+            describe: "Library to search (overrides auto-detection)",
+          })
+          .option("no-save", {
+            type: "boolean",
+            describe: "Don't remember this library for future searches",
+          })
+          .option("cabinet", {
+            type: "string",
+            describe: "Org cabinet for private docs",
+          });
       },
       async (argv) => {
         const { search } = await import("./commands/search.js");
-        await search(argv.query as string);
+        await search(argv.query as string, {
+          libraries: argv.library as string[] | undefined,
+          json: argv.json as boolean | undefined,
+          yes: argv.yes as boolean | undefined,
+          noSave: argv["no-save"] as boolean | undefined,
+          apiKey: argv["api-key"] as string | undefined,
+          cabinet: argv.cabinet as string | undefined,
+        });
       }
     )
     .command("claim", "Link your API key to a Docfork account", {}, async () => {

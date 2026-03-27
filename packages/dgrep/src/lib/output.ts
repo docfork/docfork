@@ -20,6 +20,7 @@ export interface JsonMeta {
   type: "meta";
   query: string;
   libraries: string[];
+  source?: string;
   count: number;
 }
 
