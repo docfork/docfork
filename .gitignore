@@ -5,6 +5,7 @@ node_modules/
 key.pem
 .cursor/
 .docfork/
+.dgrep/.cache/
 .claude/settings.local.json
 .claude/plans/
 .claude/worktrees/
