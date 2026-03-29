@@ -107,11 +107,8 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
 
 async function writeMcpConfig(agent: DetectedAgent, apiKey: string): Promise<void> {
   const docforkServer = {
-    command: "npx",
-    args: ["-y", "docfork@latest"],
-    env: {
-      DOCFORK_API_KEY: apiKey,
-    },
+    type: "streamable-http" as const,
+    url: `https://mcp.docfork.com?apiKey=${apiKey}`,
   };
 
   let existing: Record<string, unknown> = {};
