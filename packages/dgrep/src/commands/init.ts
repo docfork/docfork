@@ -3,9 +3,12 @@ import pc from "picocolors";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { loadProjectConfig, saveProjectConfig } from "../lib/project-config.js";
+import { searchCatalog } from "../lib/api-client.js";
+import { resolveAuth } from "../lib/auth.js";
 
 export interface InitOptions {
   yes?: boolean;
+  apiKey?: string;
   cwd?: string;
 }
 
@@ -30,9 +33,9 @@ export async function init(options: InitOptions = {}): Promise<void> {
   }
 
   // Detect from package.json
-  const deps = await detectDeps(cwd);
+  const rawDeps = await detectDeps(cwd);
 
-  if (deps.length === 0) {
+  if (rawDeps.length === 0) {
     p.log.info("No dependencies detected from package.json.");
     await saveProjectConfig(cwd, { libraries: [] });
     p.outro(
@@ -41,17 +44,50 @@ export async function init(options: InitOptions = {}): Promise<void> {
     return;
   }
 
-  p.log.step(`Detected ${deps.length} dependencies: ${pc.cyan(deps.join(", "))}`);
+  // Resolve against Docfork catalog (remote)
+  const spinner = p.spinner();
+  spinner.start(`Checking ${rawDeps.length} dependencies against Docfork catalog...`);
 
-  let selected: string[];
+  const auth = await resolveAuth(options.apiKey);
+  const matched: Array<{ name: string; identifier: string }> = [];
+
+  for (const dep of rawDeps) {
+    try {
+      const result = await searchCatalog(dep, auth);
+      if (result.libraries.length > 0) {
+        const best = result.libraries[0];
+        matched.push({ name: dep, identifier: best.identifier });
+      }
+    } catch {
+      // skip deps that fail lookup
+    }
+  }
+
+  spinner.stop(
+    `Found ${pc.cyan(String(matched.length))}/${rawDeps.length} dependencies in Docfork catalog.`
+  );
+
+  if (matched.length === 0) {
+    p.log.info("No dependencies found in Docfork catalog.");
+    await saveProjectConfig(cwd, { libraries: [] });
+    p.outro(
+      `Created ${pc.cyan(".dgrep/config.json")} (empty). Run ${pc.cyan("dgrep add <library>")} to track libraries.`
+    );
+    return;
+  }
+
+  let selected: Array<{ name: string; identifier: string }>;
 
   if (options.yes) {
-    selected = deps;
+    selected = matched;
   } else {
     const result = await p.multiselect({
       message: "Which libraries should dgrep track?",
-      options: deps.map((dep) => ({ value: dep, label: dep })),
-      initialValues: deps,
+      options: matched.map((m) => ({
+        value: m.identifier,
+        label: `${m.name} ${pc.dim(`→ ${m.identifier}`)}`,
+      })),
+      initialValues: matched.map((m) => m.identifier),
     });
 
     if (p.isCancel(result)) {
@@ -59,13 +95,17 @@ export async function init(options: InitOptions = {}): Promise<void> {
       return;
     }
 
-    selected = result as string[];
+    selected = matched.filter((m) => (result as string[]).includes(m.identifier));
   }
 
-  const sorted = selected.sort();
-  await saveProjectConfig(cwd, { ...existing, libraries: sorted });
+  const identifiers = selected.map((m) => m.identifier).sort();
+  await saveProjectConfig(cwd, { ...existing, libraries: identifiers });
 
-  p.log.success(`Tracking ${pc.cyan(String(sorted.length))} libraries in .dgrep/config.json`);
+  for (const s of selected) {
+    p.log.info(`${pc.cyan(s.name)} → ${s.identifier}`);
+  }
+
+  p.log.success(`Tracking ${pc.cyan(String(identifiers.length))} libraries in .dgrep/config.json`);
   p.outro(`Run ${pc.cyan("dgrep search")} to search your stack.`);
 }
 
