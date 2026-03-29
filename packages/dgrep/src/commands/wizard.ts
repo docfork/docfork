@@ -2,7 +2,7 @@ import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { readFile, writeFile, copyFile } from "node:fs/promises";
 import { resolveAuth } from "../lib/auth.js";
-import { loadConfig, saveConfig } from "../lib/config.js";
+import { saveConfig } from "../lib/config.js";
 import { detectAgents } from "../lib/agents.js";
 import type { DetectedAgent } from "../lib/agents.js";
 import { NetworkError } from "../lib/errors.js";

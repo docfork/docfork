@@ -1,17 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { join } from "node:path";
-import { mkdtemp, rm, mkdir, writeFile, readFile } from "node:fs/promises";
+import { mkdtemp, rm, mkdir, readFile } from "node:fs/promises";
 import { tmpdir, homedir } from "node:os";
 import { server } from "../setup.js";
 import { http, HttpResponse } from "msw";
+import { loadConfig, saveConfig } from "../../src/lib/config.js";
 
 const API_URL = "https://api.docfork.com/v1";
 
 let tempDir: string;
-const userConfigPath = join(homedir(), ".dgrep", "config.json");
+let originalConfig: Record<string, unknown>;
 
 beforeEach(async () => {
   tempDir = await mkdtemp(join(tmpdir(), "dgrep-wizard-test-"));
+  // Save original user config to restore after test
+  originalConfig = await loadConfig();
 
   // Add provision handler for all wizard tests
   server.use(
@@ -26,6 +29,9 @@ beforeEach(async () => {
 
 afterEach(async () => {
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
+  // Restore original user config to prevent test pollution
+  await saveConfig(originalConfig as Parameters<typeof saveConfig>[0]);
   await rm(tempDir, { recursive: true, force: true });
 });
 
