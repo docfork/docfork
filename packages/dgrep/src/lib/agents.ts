@@ -48,7 +48,7 @@ const AGENTS: AgentDefinition[] = [
     probeDir: ".claude",
     configPath: ".mcp.json",
     buildServerEntry: (apiKey) => ({
-      type: "streamable-http",
+      type: "http",
       url: "https://mcp.docfork.com/mcp",
       headers: { DOCFORK_API_KEY: apiKey },
     }),

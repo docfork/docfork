@@ -79,8 +79,15 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
   if (agents.length > 0) {
     for (const agent of agents) {
       if (!options.yes) {
+        // Show manual CLI alternative for Claude Code
+        if (agent.name === "claude-code") {
+          p.log.info(
+            `Or run manually:\n  ${pc.cyan(`claude mcp add --transport http docfork https://mcp.docfork.com/mcp --header "DOCFORK_API_KEY: ${auth.apiKey}"`)}`
+          );
+        }
+
         const writeConfig = await p.confirm({
-          message: `Write MCP config for ${agent.displayName}?`,
+          message: `Write MCP config for ${agent.displayName}? (${pc.dim(agent.configPath)})`,
         });
         if (!writeConfig || p.isCancel(writeConfig)) continue;
       }

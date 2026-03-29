@@ -75,13 +75,13 @@ describe("writeMcpConfigForAgent", () => {
     expect(config.mcpServers.docfork.headers.DOCFORK_API_KEY).toBe("docf_test123");
   });
 
-  it("writes Claude Code config with streamable-http under mcpServers", async () => {
+  it("writes Claude Code config with http type under mcpServers", async () => {
     const agent = { name: "claude-code", displayName: "Claude Code", configPath: join(tempDir, ".mcp.json") };
 
     await writeMcpConfigForAgent(agent, "docf_test123");
 
     const config = JSON.parse(await readFile(join(tempDir, ".mcp.json"), "utf-8"));
-    expect(config.mcpServers.docfork.type).toBe("streamable-http");
+    expect(config.mcpServers.docfork.type).toBe("http");
     expect(config.mcpServers.docfork.url).toBe("https://mcp.docfork.com/mcp");
   });
 
