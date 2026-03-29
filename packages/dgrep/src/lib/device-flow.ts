@@ -34,10 +34,10 @@ const WORKOS_BASE_URL = "https://api.workos.com";
 export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
   let response: Response;
   try {
-    response = await fetch(`${WORKOS_BASE_URL}/user-management/authorize/device`, {
+    response = await fetch(`${WORKOS_BASE_URL}/user_management/authorize/device`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ client_id: WORKOS_CLIENT_ID }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ client_id: WORKOS_CLIENT_ID }).toString(),
     });
   } catch {
     throw new NetworkError("Could not reach WorkOS. Check your connection.");
@@ -66,14 +66,14 @@ export async function pollForToken(
 
     let response: Response;
     try {
-      response = await fetch(`${WORKOS_BASE_URL}/user-management/authenticate`, {
+      response = await fetch(`${WORKOS_BASE_URL}/user_management/authenticate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
           grant_type: "urn:ietf:params:oauth:grant-type:device_code",
           device_code: deviceCode,
           client_id: WORKOS_CLIENT_ID,
-        }),
+        }).toString(),
       });
     } catch {
       // network hiccup — back off and retry
