@@ -61,7 +61,7 @@ export async function login(): Promise<void> {
 
   let apiKey: string | undefined;
   try {
-    const response = await fetch(`${API_URL}/keys/claim`, {
+    const response = await fetch(`${API_URL}/keys/exchange`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
