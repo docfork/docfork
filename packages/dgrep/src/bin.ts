@@ -86,6 +86,7 @@ async function main() {
     })
     .version()
     .help()
+    .alias("h", "help")
     .strict()
     .parse();
 }
