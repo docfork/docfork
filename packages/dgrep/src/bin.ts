@@ -71,6 +71,10 @@ async function main() {
       const { claim } = await import("./commands/claim.js");
       await claim();
     })
+    .command("status", "Show dgrep configuration and status", {}, async (argv) => {
+      const { status } = await import("./commands/status.js");
+      await status({ json: argv.json as boolean | undefined });
+    })
     .option("yes", {
       alias: "y",
       type: "boolean",
