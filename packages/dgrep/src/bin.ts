@@ -45,9 +45,10 @@ async function main() {
             array: true,
             describe: "Library to search (overrides auto-detection)",
           })
-          .option("no-save", {
+          .option("save", {
             type: "boolean",
-            describe: "Don't remember this library for future searches",
+            default: true,
+            describe: "Remember this library for future searches (use --no-save to skip)",
           })
           .option("cabinet", {
             type: "string",
@@ -60,7 +61,7 @@ async function main() {
           libraries: argv.library as string[] | undefined,
           json: argv.json as boolean | undefined,
           yes: argv.yes as boolean | undefined,
-          noSave: argv["no-save"] as boolean | undefined,
+          noSave: argv.save === false,
           apiKey: argv["api-key"] as string | undefined,
           cabinet: argv.cabinet as string | undefined,
         });
