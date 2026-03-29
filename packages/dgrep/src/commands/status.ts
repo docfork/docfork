@@ -113,7 +113,10 @@ export async function status(options: StatusOptions = {}): Promise<void> {
 
   // Libraries
   if (libs.length > 0) {
-    console.log(`  ${label("Libraries")}${libs.join(", ")} (${libs.length} tracked)`);
+    const MAX_SHOW = 10;
+    const shown = libs.slice(0, MAX_SHOW).join(", ");
+    const suffix = libs.length > MAX_SHOW ? ` ${pc.dim(`(+${libs.length - MAX_SHOW} more)`)}` : "";
+    console.log(`  ${label("Libraries")}${shown}${suffix} (${libs.length} tracked)`);
     console.log(`  ${label("Source")}.dgrep/config.json`);
   } else if (detected.deps.length > 0) {
     console.log(

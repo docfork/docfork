@@ -75,6 +75,26 @@ async function main() {
       const { status } = await import("./commands/status.js");
       await status({ json: argv.json as boolean | undefined });
     })
+    .command("list", "List tracked libraries", {}, async (argv) => {
+      const { list } = await import("./commands/list.js");
+      await list({ json: argv.json as boolean | undefined });
+    })
+    .command(
+      "remove <library>",
+      "Remove a library from tracking",
+      (yargs) => {
+        return yargs.positional("library", {
+          type: "string",
+          describe: "Library to remove",
+        });
+      },
+      async (argv) => {
+        const { remove } = await import("./commands/remove.js");
+        await remove(argv.library as string, {
+          yes: argv.yes as boolean | undefined,
+        });
+      }
+    )
     .option("yes", {
       alias: "y",
       type: "boolean",
