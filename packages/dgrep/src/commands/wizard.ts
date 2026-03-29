@@ -17,7 +17,7 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
   const cwd = options.cwd ?? process.cwd();
 
   p.intro(pc.bgCyan(pc.black(" dgrep ")));
-  p.log.step("Welcome to dgrep — documentation grounding for AI agents");
+  p.log.step("Welcome to dgrep — the Context CLI for AI Agents by Docfork");
 
   // -- Detect agents -----------------------------------
 
@@ -32,8 +32,9 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
   // -- Resolve or provision credentials -----------------------------------
 
   const auth = await resolveAuth(options.apiKey);
+  let apiKey = auth.apiKey;
 
-  if (auth.apiKey) {
+  if (apiKey) {
     p.log.success("API key found.");
   } else {
     p.log.step("Provisioning API key (no login required)...");
@@ -53,17 +54,21 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
         throw new Error(`Provision failed: ${response.status} ${text.slice(0, 200)}`);
       }
 
-      const result = (await response.json()) as {
-        apiKey: string;
-        expiresAt?: string;
-      };
+      const result = (await response.json()) as Record<string, unknown>;
+      // Backend may return apiKey or api_key
+      apiKey = (result.apiKey ?? result.api_key ?? result.key) as string | undefined;
+
+      if (!apiKey) {
+        provisionSpinner.stop("Failed.");
+        p.log.error(`Unexpected provision response: ${JSON.stringify(result).slice(0, 200)}`);
+        throw new Error("Provision response missing API key.");
+      }
 
       await saveConfig({
-        apiKey: result.apiKey,
-        expiresAt: result.expiresAt,
+        apiKey,
+        expiresAt: (result.expiresAt ?? result.expires_at) as string | undefined,
       });
 
-      auth.apiKey = result.apiKey;
       provisionSpinner.stop("API key provisioned.");
     } catch (err) {
       if (err instanceof TypeError) {
@@ -82,7 +87,7 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
         // Show manual CLI alternative for Claude Code
         if (agent.name === "claude-code") {
           p.log.info(
-            `Or run manually:\n  ${pc.cyan(`claude mcp add --transport http docfork https://mcp.docfork.com/mcp --header "DOCFORK_API_KEY: ${auth.apiKey}"`)}`
+            `Or run manually:\n  ${pc.cyan(`claude mcp add --transport http docfork https://mcp.docfork.com/mcp --header "DOCFORK_API_KEY: ${apiKey}"`)}`
           );
         }
 
@@ -92,7 +97,7 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
         if (!writeConfig || p.isCancel(writeConfig)) continue;
       }
 
-      await writeMcpConfigForAgent(agent, auth.apiKey!);
+      await writeMcpConfigForAgent(agent, apiKey!);
       p.log.success(`${agent.displayName}: ${pc.dim(agent.configPath)} updated`);
     }
   }
