@@ -11,7 +11,7 @@ export async function logout(options: LogoutOptions = {}): Promise<void> {
 
   const config = await loadConfig();
 
-  if (!config.apiKey) {
+  if (!config.apiKey && !config.claimedAt) {
     p.log.info("Not logged in. Nothing to do.");
     p.outro("Done.");
     return;

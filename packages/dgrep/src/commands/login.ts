@@ -87,7 +87,12 @@ export async function login(): Promise<void> {
       throw new Error(`Claim failed: ${response.status} ${text.slice(0, 200)}`);
     }
 
-    claimResult = (await response.json()) as { apiKey: string };
+    const result = (await response.json()) as Record<string, unknown>;
+    // Backend may return apiKey, api_key, or key
+    const claimedKey = (result.apiKey ?? result.api_key ?? result.key ?? config.apiKey) as
+      | string
+      | undefined;
+    claimResult = { apiKey: claimedKey };
   } catch (err) {
     if (err instanceof TypeError) {
       claimSpinner.stop("Failed.");
@@ -99,7 +104,7 @@ export async function login(): Promise<void> {
   // -- Save permanent key -----------------------------------
 
   await saveConfig({
-    apiKey: claimResult.apiKey,
+    apiKey: claimResult.apiKey ?? config.apiKey,
     cabinet: config.cabinet,
     claimedAt: new Date().toISOString(),
   });
