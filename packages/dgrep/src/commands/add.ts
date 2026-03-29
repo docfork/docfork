@@ -1,3 +1,4 @@
+import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { resolveSource } from "../lib/providers.js";
@@ -11,10 +12,10 @@ export interface AddOptions {
 export async function add(library: string, options: AddOptions = {}): Promise<void> {
   const cwd = options.cwd ?? process.cwd();
 
-  p.intro(pc.bgCyan(pc.black(" dgrep add ")));
+  p.intro(accent().bg(pc.black(" dgrep add ")));
 
   const source = resolveSource(library);
-  p.log.step(`Resolved: ${pc.cyan(library)} (${pc.dim(source.type)})`);
+  p.log.step(`Resolved: ${accent().fg(library)} (${pc.dim(source.type)})`);
 
   if (!options.yes) {
     const confirm = await p.confirm({
@@ -30,12 +31,12 @@ export async function add(library: string, options: AddOptions = {}): Promise<vo
   const added = await addLibraryToProject(projectRoot, library);
 
   if (added) {
-    p.log.success(`Added ${pc.cyan(library)} to .dgrep/config.json`);
+    p.log.success(`Added ${accent().fg(library)} to .dgrep/config.json`);
     console.log(`library: ${library}`);
     console.log(`identifier: ${source.identifier}`);
     console.log(`source: ${source.type}`);
   } else {
-    p.log.info(`${pc.cyan(library)} already tracked, skipping.`);
+    p.log.info(`${accent().fg(library)} already tracked, skipping.`);
   }
 
   p.outro("Done.");

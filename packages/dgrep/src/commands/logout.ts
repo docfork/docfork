@@ -1,3 +1,4 @@
+import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { loadConfig, saveConfig, configPath } from "../lib/config.js";
@@ -7,7 +8,7 @@ export interface LogoutOptions {
 }
 
 export async function logout(options: LogoutOptions = {}): Promise<void> {
-  p.intro(pc.bgCyan(pc.black(" dgrep logout ")));
+  p.intro(accent().bg(pc.black(" dgrep logout ")));
 
   const config = await loadConfig();
 

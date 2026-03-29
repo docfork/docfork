@@ -1,3 +1,4 @@
+import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { resolveAuth } from "../lib/auth.js";
@@ -41,8 +42,8 @@ export async function search(query: string, options: SearchOptions = {}): Promis
     } else {
       p.log.error(
         `No libraries found. Specify a library or initialize your project.\n` +
-          `  ${pc.cyan(`dgrep search "${query}" --library react`)}\n` +
-          `  ${pc.cyan("dgrep init")}`
+          `  ${accent().fg(`dgrep search "${query}" --library react`)}\n` +
+          `  ${accent().fg("dgrep init")}`
       );
     }
     process.exitCode = 1;
@@ -61,7 +62,7 @@ export async function search(query: string, options: SearchOptions = {}): Promis
             ? " (detected from package.json)"
             : " (catalog)";
 
-    p.log.step(`Searching: ${pc.cyan(resolved.libraries.join(", "))}${pc.dim(sourceLabel)}`);
+    p.log.step(`Searching: ${accent().fg(resolved.libraries.join(", "))}${pc.dim(sourceLabel)}`);
   }
 
   const results: MergedResult[] = [];
@@ -126,7 +127,7 @@ export async function search(query: string, options: SearchOptions = {}): Promis
         await addLibraryToProject(projectRoot, lib);
       }
       if (!options.json) {
-        p.log.success(`Added ${pc.cyan(options.libraries.join(", "))} to .dgrep/config.json`);
+        p.log.success(`Added ${accent().fg(options.libraries.join(", "))} to .dgrep/config.json`);
       }
     } else if (!options.json) {
       const save = await p.confirm({
@@ -136,7 +137,7 @@ export async function search(query: string, options: SearchOptions = {}): Promis
         for (const lib of options.libraries) {
           await addLibraryToProject(projectRoot, lib);
         }
-        p.log.success(`Added ${pc.cyan(options.libraries.join(", "))} to .dgrep/config.json`);
+        p.log.success(`Added ${accent().fg(options.libraries.join(", "))} to .dgrep/config.json`);
       }
     }
   }

@@ -1,3 +1,4 @@
+import { accent } from "../lib/theme.js";
 import pc from "picocolors";
 import { loadConfig, configPath } from "../lib/config.js";
 import { findProjectRoot, loadProjectConfig } from "../lib/project-config.js";
@@ -92,9 +93,11 @@ export async function status(options: StatusOptions = {}): Promise<void> {
   if (isClaimed) {
     console.log(`  ${label("Account")}${pc.green("✓")} claimed`);
   } else if (hasApiKey) {
-    console.log(`  ${label("Account")}${pc.yellow("⚠")} unclaimed — run ${pc.cyan("dgrep login")}`);
+    console.log(
+      `  ${label("Account")}${pc.yellow("⚠")} unclaimed — run ${accent().fg("dgrep login")}`
+    );
   } else {
-    console.log(`  ${label("Account")}${pc.dim("—")} run ${pc.cyan("dgrep")} to get started`);
+    console.log(`  ${label("Account")}${pc.dim("—")} run ${accent().fg("dgrep")} to get started`);
   }
 
   if (userConfig.cabinet) {
@@ -122,7 +125,7 @@ export async function status(options: StatusOptions = {}): Promise<void> {
     console.log(
       `  ${label("Libraries")}${pc.yellow("none tracked")} (${detected.deps.length} detected)`
     );
-    console.log(`  ${label("Tip")}run ${pc.cyan("dgrep init")}`);
+    console.log(`  ${label("Tip")}run ${accent().fg("dgrep init")}`);
   } else {
     console.log(`  ${label("Libraries")}${pc.dim("none")}`);
   }

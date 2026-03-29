@@ -1,3 +1,4 @@
+import { accent } from "../lib/theme.js";
 import pc from "picocolors";
 import { findProjectRoot, loadProjectConfig } from "../lib/project-config.js";
 
@@ -21,7 +22,7 @@ export async function list(options: ListOptions = {}): Promise<void> {
 
   if (libs.length === 0) {
     console.log(
-      `No tracked libraries. Run ${pc.cyan("dgrep init")} or ${pc.cyan("dgrep add <library>")}.`
+      `No tracked libraries. Run ${accent().fg("dgrep init")} or ${accent().fg("dgrep add <library>")}.`
     );
     return;
   }

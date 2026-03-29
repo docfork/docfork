@@ -1,3 +1,4 @@
+import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { findProjectRoot, loadProjectConfig, saveProjectConfig } from "../lib/project-config.js";
@@ -21,7 +22,7 @@ export async function remove(library: string, options: RemoveOptions = {}): Prom
   const libs = config?.libraries ?? [];
 
   if (!libs.includes(library)) {
-    p.log.info(`${pc.cyan(library)} is not tracked. Nothing to remove.`);
+    p.log.info(`${accent().fg(library)} is not tracked. Nothing to remove.`);
     return;
   }
 
@@ -38,6 +39,6 @@ export async function remove(library: string, options: RemoveOptions = {}): Prom
   const updated = libs.filter((l) => l !== library);
   await saveProjectConfig(projectRoot, { ...config, libraries: updated });
 
-  p.log.success(`Removed ${pc.cyan(library)} from .dgrep/config.json`);
+  p.log.success(`Removed ${accent().fg(library)} from .dgrep/config.json`);
   console.log(`${updated.length} libraries remaining`);
 }

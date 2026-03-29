@@ -1,3 +1,4 @@
+import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { join } from "node:path";
@@ -12,7 +13,7 @@ export interface InitOptions {
 export async function init(options: InitOptions = {}): Promise<void> {
   const cwd = options.cwd ?? process.cwd();
 
-  p.intro(pc.bgCyan(pc.black(" dgrep init ")));
+  p.intro(accent().bg(pc.black(" dgrep init ")));
 
   // -- Detect project -----------------------------------
 
@@ -20,16 +21,18 @@ export async function init(options: InitOptions = {}): Promise<void> {
   const configPath = join(detected.root, ".dgrep", "config.json");
 
   if (detected.isMonorepo) {
-    p.log.step(`Project: ${pc.cyan(detected.root)} (monorepo, ${detected.packageCount} packages)`);
+    p.log.step(
+      `Project: ${accent().fg(detected.root)} (monorepo, ${detected.packageCount} packages)`
+    );
   } else {
-    p.log.step(`Project: ${pc.cyan(detected.root)}`);
+    p.log.step(`Project: ${accent().fg(detected.root)}`);
   }
 
   // Check if already initialized
   const existing = await loadProjectConfig(detected.root);
   if (existing?.libraries && existing.libraries.length > 0) {
     p.log.warning(
-      `Already tracking ${existing.libraries.length} libraries: ${pc.cyan(existing.libraries.join(", "))}`
+      `Already tracking ${existing.libraries.length} libraries: ${accent().fg(existing.libraries.join(", "))}`
     );
     if (!options.yes) {
       const overwrite = await p.confirm({ message: "Overwrite?" });
@@ -52,14 +55,14 @@ export async function init(options: InitOptions = {}): Promise<void> {
     );
     await saveProjectConfig(detected.root, { libraries: [] });
     p.log.message(`  ${pc.dim("→")} ${configPath}`);
-    p.outro(`Run ${pc.cyan("dgrep add <library>")} to track libraries.`);
+    p.outro(`Run ${accent().fg("dgrep add <library>")} to track libraries.`);
     return;
   }
 
   p.log.step(
-    `Detected ${pc.cyan(String(detected.deps.length))} dependencies` +
+    `Detected ${accent().fg(String(detected.deps.length))} dependencies` +
       (skipped > 0 ? ` ${pc.dim(`(skipped ${skipped} build tools)`)}` : "") +
-      `:\n  ${pc.cyan(detected.deps.join(", "))}`
+      `:\n  ${accent().fg(detected.deps.join(", "))}`
   );
 
   // -- Select -----------------------------------
@@ -86,7 +89,7 @@ export async function init(options: InitOptions = {}): Promise<void> {
   const sorted = selected.sort();
   await saveProjectConfig(detected.root, { ...existing, libraries: sorted });
 
-  p.log.success(`Tracking ${pc.cyan(String(sorted.length))} libraries`);
+  p.log.success(`Tracking ${accent().fg(String(sorted.length))} libraries`);
   p.log.message(`  ${pc.dim("→")} ${configPath}`);
-  p.outro(`Run ${pc.cyan("dgrep search")} to search your stack.`);
+  p.outro(`Run ${accent().fg("dgrep search")} to search your stack.`);
 }

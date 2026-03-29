@@ -5,12 +5,18 @@ const COLORS = ["cyan", "red", "green", "yellow", "blue", "magenta"] as const;
 type AccentColor = (typeof COLORS)[number];
 
 const COLOR_FN: Record<AccentColor, (s: string) => string> = {
-  cyan: pc.cyan,
-  red: pc.red,
-  green: pc.green,
-  yellow: pc.yellow,
-  blue: pc.blue,
-  magenta: pc.magenta,
+  // cyan: pc.cyan,
+  // red: pc.red,
+  // green: pc.green,
+  // yellow: pc.yellow,
+  // blue: pc.blue,
+  // magenta: pc.magenta,
+  cyan: pc.cyanBright,
+  red: pc.redBright,
+  green: pc.greenBright,
+  yellow: pc.yellowBright,
+  blue: pc.blueBright,
+  magenta: pc.magentaBright,
 };
 
 export async function color(value?: string): Promise<void> {
@@ -20,10 +26,10 @@ export async function color(value?: string): Promise<void> {
   // Show current + available
   if (!value) {
     console.log(`\n  ${pc.bold("dgrep color")}\n`);
-    console.log(`  Current: ${current ?? "cyan"} (default)\n`);
+    console.log(`  Current: ${current ?? "red"} (default)\n`);
     for (const c of COLORS) {
       const fn = COLOR_FN[c];
-      const marker = c === (current ?? "cyan") ? " ←" : "";
+      const marker = c === (current ?? "red") ? " ←" : "";
       console.log(`  ${fn("■")} ${c}${pc.dim(marker)}`);
     }
     console.log(`\n  Usage: ${pc.dim("dgrep color <name>")}`);
@@ -35,7 +41,7 @@ export async function color(value?: string): Promise<void> {
   if (value === "default") {
     const { accentColor: _, ...rest } = config as Record<string, unknown>;
     await saveConfig(rest as Parameters<typeof saveConfig>[0]);
-    console.log(`  Accent color reset to ${pc.cyan("cyan")} (default)`);
+    console.log(`  Accent color reset to ${pc.redBright("red")} (default)`);
     return;
   }
 

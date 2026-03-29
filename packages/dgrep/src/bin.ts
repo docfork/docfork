@@ -3,8 +3,10 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import pc from "picocolors";
 import { DgrepError } from "./lib/errors.js";
+import { loadAccent } from "./lib/theme.js";
 
 async function main() {
+  await loadAccent();
   await yargs(hideBin(process.argv))
     .scriptName("dgrep")
     .usage("$0 [command]")

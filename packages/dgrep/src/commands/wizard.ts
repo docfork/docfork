@@ -1,3 +1,4 @@
+import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { resolveAuth } from "../lib/auth.js";
@@ -16,7 +17,7 @@ export interface WizardOptions {
 export async function wizard(options: WizardOptions = {}): Promise<void> {
   const cwd = options.cwd ?? process.cwd();
 
-  p.intro(pc.bgCyan(pc.black(" dgrep ")));
+  p.intro(accent().bg(pc.black(" dgrep ")));
   p.log.step("Welcome to dgrep — the Context CLI for AI Agents by Docfork");
 
   // -- Detect agents -----------------------------------
@@ -24,7 +25,7 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
   const agents = await detectAgents(cwd);
 
   if (agents.length > 0) {
-    p.log.success(`Detected: ${agents.map((a) => pc.cyan(a.displayName)).join(", ")}`);
+    p.log.success(`Detected: ${agents.map((a) => accent().fg(a.displayName)).join(", ")}`);
   } else {
     p.log.info("No IDE agents detected (Cursor, Claude Code, OpenCode).");
   }
@@ -87,7 +88,7 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
         // Show manual CLI alternative for Claude Code
         if (agent.name === "claude-code") {
           p.log.info(
-            `Or run manually:\n  ${pc.cyan(`claude mcp add --transport http docfork https://mcp.docfork.com/mcp --header "DOCFORK_API_KEY: ${apiKey}"`)}`
+            `Or run manually:\n  ${accent().fg(`claude mcp add --transport http docfork https://mcp.docfork.com/mcp --header "DOCFORK_API_KEY: ${apiKey}"`)}`
           );
         }
 
@@ -109,8 +110,8 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
   if (agents.length > 0) {
     p.log.info(`Your IDE agents can now use Docfork. Try searching in ${agents[0].displayName}!`);
   }
-  p.log.info(`Run ${pc.cyan("dgrep init")} to track your project's libraries.`);
-  p.log.info(`Run ${pc.cyan("dgrep login")} to link your account (1K/mo free).`);
+  p.log.info(`Run ${accent().fg("dgrep init")} to track your project's libraries.`);
+  p.log.info(`Run ${accent().fg("dgrep login")} to link your account (1K/mo free).`);
 
   p.outro("Setup complete.");
 }

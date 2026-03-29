@@ -1,3 +1,4 @@
+import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { loadConfig, saveConfig } from "../lib/config.js";
@@ -7,7 +8,7 @@ import { NetworkError } from "../lib/errors.js";
 const API_URL = "https://api.docfork.com/v1";
 
 export async function login(): Promise<void> {
-  p.intro(pc.bgCyan(pc.black(" dgrep login ")));
+  p.intro(accent().bg(pc.black(" dgrep login ")));
 
   const config = await loadConfig();
 
@@ -19,7 +20,7 @@ export async function login(): Promise<void> {
 
   if (!config.apiKey) {
     p.log.warning(
-      `No API key found. Run ${pc.cyan("npx dgrep")} first to provision one, then log in.`
+      `No API key found. Run ${accent().fg("npx dgrep")} first to provision one, then log in.`
     );
     p.outro("Done.");
     return;
@@ -42,7 +43,7 @@ export async function login(): Promise<void> {
 
   // -- Display code and open browser -----------------------------------
 
-  p.log.step(`Your code: ${pc.bold(pc.cyan(deviceCode.user_code))}`);
+  p.log.step(`Your code: ${pc.bold(accent().fg(deviceCode.user_code))}`);
   p.log.message(`Visit: ${pc.underline(deviceCode.verification_uri_complete)}`);
 
   openBrowser(deviceCode.verification_uri_complete);
