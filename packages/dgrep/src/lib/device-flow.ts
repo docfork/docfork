@@ -96,7 +96,7 @@ export async function pollForToken(
     }
 
     if (body.error === "expired_token") {
-      throw new Error("Code expired. Run `dgrep claim` again.");
+      throw new Error("Code expired. Run `dgrep login` again.");
     }
 
     if (body.error === "access_denied") {
@@ -106,7 +106,7 @@ export async function pollForToken(
     throw new Error(`Authentication failed: ${body.error} — ${body.error_description ?? ""}`);
   }
 
-  throw new Error("Timed out waiting for authentication. Run `dgrep claim` again.");
+  throw new Error("Timed out waiting for authentication. Run `dgrep login` again.");
 }
 
 // -- Browser -----------------------------------

@@ -49,13 +49,13 @@ async function get<T>(
   if (!response.ok) {
     const text = await response.text();
     if (response.status === 401) {
-      throw new AuthError("Invalid API key. Run `dgrep claim` to authenticate.");
+      throw new AuthError("Invalid API key. Run `dgrep login` to authenticate.");
     }
     if (response.status === 404) {
       throw new NotFoundError(text.slice(0, 200) || "Resource not found.");
     }
     if (response.status === 429) {
-      throw new RateLimitError("Rate limit reached. Claim your account for 1K/mo: `dgrep claim`");
+      throw new RateLimitError("Rate limit reached. Log in for 1K/mo free: `dgrep login`");
     }
     throw new Error(`${response.status} ${response.statusText}: ${text.slice(0, 500)}`);
   }

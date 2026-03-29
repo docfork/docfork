@@ -110,7 +110,7 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
     p.log.info(`Your IDE agents can now use Docfork. Try searching in ${agents[0].displayName}!`);
   }
   p.log.info(`Run ${pc.cyan("dgrep init")} to track your project's libraries.`);
-  p.log.info(`Run ${pc.cyan("dgrep claim")} to link this key to your Docfork account.`);
+  p.log.info(`Run ${pc.cyan("dgrep login")} to link your account (1K/mo free).`);
 
   p.outro("Setup complete.");
 }

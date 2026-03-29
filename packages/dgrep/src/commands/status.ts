@@ -92,7 +92,7 @@ export async function status(options: StatusOptions = {}): Promise<void> {
   if (isClaimed) {
     console.log(`  ${label("Account")}${pc.green("✓")} claimed`);
   } else if (hasApiKey) {
-    console.log(`  ${label("Account")}${pc.yellow("⚠")} unclaimed — run ${pc.cyan("dgrep claim")}`);
+    console.log(`  ${label("Account")}${pc.yellow("⚠")} unclaimed — run ${pc.cyan("dgrep login")}`);
   } else {
     console.log(`  ${label("Account")}${pc.dim("—")} run ${pc.cyan("dgrep")} to get started`);
   }
