@@ -25,8 +25,7 @@ interface TokenError {
 
 // -- Configuration -----------------------------------
 
-// TODO: replace with real WorkOS public client ID once created
-const WORKOS_CLIENT_ID = "client_docfork_cli";
+const WORKOS_CLIENT_ID = "client_01K4WFNFFHHNXAKAB53WF8XBMQ";
 const WORKOS_BASE_URL = "https://api.workos.com";
 
 // -- Device code request -----------------------------------
