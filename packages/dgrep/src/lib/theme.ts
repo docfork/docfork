@@ -12,17 +12,18 @@ const ACCENT_FNS: Record<string, { fg: ColorFn; bg: ColorFn }> = {
   magenta: { fg: pc.magentaBright, bg: pc.bgMagenta },
 };
 
+const DEFAULT = "blue";
+
 let cached: { fg: ColorFn; bg: ColorFn } | null = null;
 
 export async function loadAccent(): Promise<{ fg: ColorFn; bg: ColorFn }> {
   if (cached) return cached;
   const config = await loadConfig();
   const name = (config as Record<string, unknown>).accentColor as string | undefined;
-  cached = ACCENT_FNS[name ?? "red"] ?? ACCENT_FNS.red;
+  cached = ACCENT_FNS[name ?? DEFAULT] ?? ACCENT_FNS[DEFAULT];
   return cached;
 }
 
-// Sync getter after first loadAccent call
 export function accent(): { fg: ColorFn; bg: ColorFn } {
-  return cached ?? ACCENT_FNS.red;
+  return cached ?? ACCENT_FNS[DEFAULT];
 }

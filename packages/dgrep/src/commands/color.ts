@@ -5,12 +5,6 @@ const COLORS = ["cyan", "red", "green", "yellow", "blue", "magenta"] as const;
 type AccentColor = (typeof COLORS)[number];
 
 const COLOR_FN: Record<AccentColor, (s: string) => string> = {
-  // cyan: pc.cyan,
-  // red: pc.red,
-  // green: pc.green,
-  // yellow: pc.yellow,
-  // blue: pc.blue,
-  // magenta: pc.magenta,
   cyan: pc.cyanBright,
   red: pc.redBright,
   green: pc.greenBright,
@@ -41,7 +35,7 @@ export async function color(value?: string): Promise<void> {
   if (value === "default") {
     const { accentColor: _, ...rest } = config as Record<string, unknown>;
     await saveConfig(rest as Parameters<typeof saveConfig>[0]);
-    console.log(`  Accent color reset to ${pc.redBright("red")} (default)`);
+    console.log(`  Accent color reset to ${pc.blueBright("blue")} (default)`);
     return;
   }
 

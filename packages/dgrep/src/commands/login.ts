@@ -18,15 +18,7 @@ export async function login(): Promise<void> {
     return;
   }
 
-  if (!config.apiKey) {
-    p.log.warning(
-      `No API key found. Run ${accent().fg("npx dgrep")} first to provision one, then log in.`
-    );
-    p.outro("Done.");
-    return;
-  }
-
-  // -- Request device code -----------------------------------
+  // -- Device flow (works with or without existing key) -----------------------------------
 
   const spinner = p.spinner();
   spinner.start("Requesting authentication code...");
@@ -40,8 +32,6 @@ export async function login(): Promise<void> {
   }
 
   spinner.stop("Authentication code received.");
-
-  // -- Display code and open browser -----------------------------------
 
   p.log.step(`Your code: ${pc.bold(accent().fg(deviceCode.user_code))}`);
   p.log.message(`Visit: ${pc.underline(deviceCode.verification_uri_complete)}`);
@@ -64,36 +54,30 @@ export async function login(): Promise<void> {
 
   pollSpinner.stop("Authenticated.");
 
-  // -- Exchange for permanent key -----------------------------------
+  // -- Exchange for API key -----------------------------------
 
   const claimSpinner = p.spinner();
-  claimSpinner.start("Linking API key to your account...");
+  claimSpinner.start("Getting your API key...");
 
-  let claimResult;
+  let apiKey: string | undefined;
   try {
     const response = await fetch(`${API_URL}/keys/claim`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         workosAccessToken: token.access_token,
-        unclaimedApiKey: config.apiKey,
+        ...(config.apiKey ? { unclaimedApiKey: config.apiKey } : {}),
       }),
     });
 
     if (!response.ok) {
       const text = await response.text();
-      claimSpinner.stop("Failed to link key.");
-      throw new Error(`Claim failed: ${response.status} ${text.slice(0, 200)}`);
+      claimSpinner.stop("Failed.");
+      throw new Error(`Login failed: ${response.status} ${text.slice(0, 200)}`);
     }
 
     const result = (await response.json()) as Record<string, unknown>;
-    // Backend may return apiKey, api_key, or key
-    const claimedKey = (result.apiKey ?? result.api_key ?? result.key ?? config.apiKey) as
-      | string
-      | undefined;
-    claimResult = { apiKey: claimedKey };
+    apiKey = (result.apiKey ?? result.api_key ?? result.key ?? config.apiKey) as string | undefined;
   } catch (err) {
     if (err instanceof TypeError) {
       claimSpinner.stop("Failed.");
@@ -102,15 +86,15 @@ export async function login(): Promise<void> {
     throw err;
   }
 
-  // -- Save permanent key -----------------------------------
+  // -- Save -----------------------------------
 
   await saveConfig({
-    apiKey: claimResult.apiKey ?? config.apiKey,
+    apiKey,
     cabinet: config.cabinet,
     claimedAt: new Date().toISOString(),
   });
 
-  claimSpinner.stop("API key linked.");
+  claimSpinner.stop("Logged in.");
 
-  p.outro(`${pc.green("Done!")} Your API key is now linked to your Docfork account.`);
+  p.outro(`${pc.green("Done!")} You're logged in to Docfork.`);
 }
