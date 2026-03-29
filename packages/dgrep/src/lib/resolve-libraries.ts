@@ -1,6 +1,5 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { findProjectRoot, loadProjectConfig } from "./project-config.js";
+import { detectProjectDeps } from "./detect-deps.js";
 
 export type LibrarySource = "flag" | "project" | "detected" | "catalog";
 
@@ -37,11 +36,11 @@ export async function resolveLibraries(options: ResolveOptions = {}): Promise<Re
     }
   }
 
-  // Tier 3: package.json auto-detect
-  const detected = await detectFromPackageJson(cwd);
-  if (detected.length > 0) {
+  // Tier 3: package.json auto-detect (with monorepo support + dep-filter)
+  const detected = await detectProjectDeps(cwd);
+  if (detected.deps.length > 0) {
     return {
-      libraries: detected,
+      libraries: detected.deps.slice(0, 10),
       source: "detected",
     };
   }
@@ -51,41 +50,4 @@ export async function resolveLibraries(options: ResolveOptions = {}): Promise<Re
     libraries: [],
     source: "catalog",
   };
-}
-
-async function detectFromPackageJson(cwd: string): Promise<string[]> {
-  try {
-    const raw = await readFile(join(cwd, "package.json"), "utf-8");
-    const pkg = JSON.parse(raw) as {
-      dependencies?: Record<string, string>;
-      devDependencies?: Record<string, string>;
-    };
-
-    const allDeps = [
-      ...Object.keys(pkg.dependencies ?? {}),
-      ...Object.keys(pkg.devDependencies ?? {}),
-    ];
-
-    // Filter out common non-documentation deps (build tools, types, etc.)
-    const filtered = allDeps.filter(
-      (dep) =>
-        !dep.startsWith("@types/") &&
-        !dep.startsWith("eslint") &&
-        !dep.startsWith("prettier") &&
-        ![
-          "typescript",
-          "vitest",
-          "jest",
-          "mocha",
-          "msw",
-          "obuild",
-          "turbo",
-          "concurrently",
-        ].includes(dep)
-    );
-
-    return [...new Set(filtered)].slice(0, 10);
-  } catch {
-    return [];
-  }
 }

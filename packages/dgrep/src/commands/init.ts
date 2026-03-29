@@ -1,8 +1,8 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
-import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { loadProjectConfig, saveProjectConfig } from "../lib/project-config.js";
+import { detectProjectDeps } from "../lib/detect-deps.js";
 
 export interface InitOptions {
   yes?: boolean;
@@ -14,11 +14,22 @@ export async function init(options: InitOptions = {}): Promise<void> {
 
   p.intro(pc.bgCyan(pc.black(" dgrep init ")));
 
+  // -- Detect project -----------------------------------
+
+  const detected = await detectProjectDeps(cwd);
+  const configPath = join(detected.root, ".dgrep", "config.json");
+
+  if (detected.isMonorepo) {
+    p.log.step(`Project: ${pc.cyan(detected.root)} (monorepo, ${detected.packageCount} packages)`);
+  } else {
+    p.log.step(`Project: ${pc.cyan(detected.root)}`);
+  }
+
   // Check if already initialized
-  const existing = await loadProjectConfig(cwd);
+  const existing = await loadProjectConfig(detected.root);
   if (existing?.libraries && existing.libraries.length > 0) {
     p.log.warning(
-      `.dgrep/config.json already exists with ${existing.libraries.length} libraries: ${pc.cyan(existing.libraries.join(", "))}`
+      `Already tracking ${existing.libraries.length} libraries: ${pc.cyan(existing.libraries.join(", "))}`
     );
     if (!options.yes) {
       const overwrite = await p.confirm({ message: "Overwrite?" });
@@ -29,29 +40,39 @@ export async function init(options: InitOptions = {}): Promise<void> {
     }
   }
 
-  // Detect from package.json
-  const deps = await detectDeps(cwd);
+  // -- Show detected deps -----------------------------------
 
-  if (deps.length === 0) {
-    p.log.info("No dependencies detected from package.json.");
-    await saveProjectConfig(cwd, { libraries: [] });
-    p.outro(
-      `Created ${pc.cyan(".dgrep/config.json")} (empty). Run ${pc.cyan("dgrep add <library>")} to track libraries.`
+  const skipped = detected.totalBeforeFilter - detected.deps.length;
+
+  if (detected.deps.length === 0) {
+    p.log.info(
+      skipped > 0
+        ? `No library dependencies found (skipped ${skipped} build tools).`
+        : "No dependencies detected."
     );
+    await saveProjectConfig(detected.root, { libraries: [] });
+    p.log.message(`  ${pc.dim("→")} ${configPath}`);
+    p.outro(`Run ${pc.cyan("dgrep add <library>")} to track libraries.`);
     return;
   }
 
-  p.log.step(`Detected ${deps.length} dependencies: ${pc.cyan(deps.join(", "))}`);
+  p.log.step(
+    `Detected ${pc.cyan(String(detected.deps.length))} dependencies` +
+      (skipped > 0 ? ` ${pc.dim(`(skipped ${skipped} build tools)`)}` : "") +
+      `:\n  ${pc.cyan(detected.deps.join(", "))}`
+  );
+
+  // -- Select -----------------------------------
 
   let selected: string[];
 
   if (options.yes) {
-    selected = deps;
+    selected = detected.deps;
   } else {
     const result = await p.multiselect({
       message: "Which libraries should dgrep track?",
-      options: deps.map((dep) => ({ value: dep, label: dep })),
-      initialValues: deps,
+      options: detected.deps.map((dep) => ({ value: dep, label: dep })),
+      initialValues: detected.deps,
     });
 
     if (p.isCancel(result)) {
@@ -63,44 +84,9 @@ export async function init(options: InitOptions = {}): Promise<void> {
   }
 
   const sorted = selected.sort();
-  await saveProjectConfig(cwd, { ...existing, libraries: sorted });
+  await saveProjectConfig(detected.root, { ...existing, libraries: sorted });
 
-  p.log.success(`Tracking ${pc.cyan(String(sorted.length))} libraries in .dgrep/config.json`);
+  p.log.success(`Tracking ${pc.cyan(String(sorted.length))} libraries`);
+  p.log.message(`  ${pc.dim("→")} ${configPath}`);
   p.outro(`Run ${pc.cyan("dgrep search")} to search your stack.`);
-}
-
-async function detectDeps(cwd: string): Promise<string[]> {
-  try {
-    const raw = await readFile(join(cwd, "package.json"), "utf-8");
-    const pkg = JSON.parse(raw) as {
-      dependencies?: Record<string, string>;
-      devDependencies?: Record<string, string>;
-    };
-
-    const allDeps = [
-      ...Object.keys(pkg.dependencies ?? {}),
-      ...Object.keys(pkg.devDependencies ?? {}),
-    ];
-
-    return allDeps
-      .filter(
-        (dep) =>
-          !dep.startsWith("@types/") &&
-          !dep.startsWith("eslint") &&
-          !dep.startsWith("prettier") &&
-          ![
-            "typescript",
-            "vitest",
-            "jest",
-            "mocha",
-            "msw",
-            "obuild",
-            "turbo",
-            "concurrently",
-          ].includes(dep)
-      )
-      .sort();
-  } catch {
-    return [];
-  }
 }
