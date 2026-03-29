@@ -6,20 +6,20 @@ import { NetworkError } from "../lib/errors.js";
 
 const API_URL = "https://api.docfork.com/v1";
 
-export async function claim(): Promise<void> {
-  p.intro(pc.bgCyan(pc.black(" dgrep claim ")));
+export async function login(): Promise<void> {
+  p.intro(pc.bgCyan(pc.black(" dgrep login ")));
 
   const config = await loadConfig();
 
   if (config.claimedAt) {
-    p.log.info("Already claimed. Your API key is linked to your account.");
+    p.log.info("Already logged in. Your API key is linked to your account.");
     p.outro("Done.");
     return;
   }
 
   if (!config.apiKey) {
     p.log.warning(
-      `No API key found. Run ${pc.cyan("npx dgrep")} first to provision one, then claim it.`
+      `No API key found. Run ${pc.cyan("npx dgrep")} first to provision one, then log in.`
     );
     p.outro("Done.");
     return;

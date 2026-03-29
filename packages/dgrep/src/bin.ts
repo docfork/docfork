@@ -67,9 +67,13 @@ async function main() {
         });
       }
     )
-    .command("claim", "Link your API key to a Docfork account", {}, async () => {
-      const { claim } = await import("./commands/claim.js");
-      await claim();
+    .command("login", "Log in to your Docfork account", {}, async () => {
+      const { login } = await import("./commands/login.js");
+      await login();
+    })
+    .command("logout", "Log out and clear credentials", {}, async (argv) => {
+      const { logout } = await import("./commands/logout.js");
+      await logout({ yes: argv.yes as boolean | undefined });
     })
     .command("status", "Show dgrep configuration and status", {}, async (argv) => {
       const { status } = await import("./commands/status.js");
