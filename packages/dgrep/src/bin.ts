@@ -79,6 +79,24 @@ async function main() {
       const { status } = await import("./commands/status.js");
       await status({ json: argv.json as boolean | undefined });
     })
+    .command(
+      "color [color]",
+      "Set accent color",
+      (yargs) => {
+        return yargs.positional("color", {
+          type: "string",
+          describe: "Color name (cyan, red, green, yellow, blue, magenta, default)",
+        });
+      },
+      async (argv) => {
+        const { color } = await import("./commands/color.js");
+        await color(argv.color as string | undefined);
+      }
+    )
+    .command("doctor", "Diagnose dgrep setup and connectivity", {}, async (argv) => {
+      const { doctor } = await import("./commands/doctor.js");
+      await doctor({ json: argv.json as boolean | undefined });
+    })
     .command("list", "List tracked libraries", {}, async (argv) => {
       const { list } = await import("./commands/list.js");
       await list({ json: argv.json as boolean | undefined });
