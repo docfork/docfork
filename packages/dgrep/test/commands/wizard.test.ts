@@ -51,7 +51,8 @@ describe("wizard command", () => {
     // Should have written MCP config
     const mcpConfig = JSON.parse(await readFile(join(tempDir, ".cursor", "mcp.json"), "utf-8"));
     expect(mcpConfig.mcpServers).toHaveProperty("docfork");
-    expect(mcpConfig.mcpServers.docfork.url).toContain("mcp.docfork.com");
+    expect(mcpConfig.mcpServers.docfork.url).toBe("https://mcp.docfork.com/mcp");
+    expect(mcpConfig.mcpServers.docfork.headers.DOCFORK_API_KEY).toBeDefined();
   });
 
   it("uses existing API key and skips provision", async () => {
@@ -65,7 +66,7 @@ describe("wizard command", () => {
 
     // MCP config should use the existing key
     const mcpConfig = JSON.parse(await readFile(join(tempDir, ".cursor", "mcp.json"), "utf-8"));
-    expect(mcpConfig.mcpServers.docfork.url).toContain("docf_existing_from_env");
+    expect(mcpConfig.mcpServers.docfork.headers.DOCFORK_API_KEY).toBe("docf_existing_from_env");
   });
 
   it("handles no agents detected gracefully", async () => {

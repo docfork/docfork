@@ -1,10 +1,8 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
-import { readFile, writeFile, copyFile } from "node:fs/promises";
 import { resolveAuth } from "../lib/auth.js";
 import { saveConfig } from "../lib/config.js";
-import { detectAgents } from "../lib/agents.js";
-import type { DetectedAgent } from "../lib/agents.js";
+import { detectAgents, writeMcpConfigForAgent } from "../lib/agents.js";
 import { NetworkError } from "../lib/errors.js";
 
 const API_URL = "https://api.docfork.com/v1";
@@ -28,7 +26,7 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
   if (agents.length > 0) {
     p.log.success(`Detected: ${agents.map((a) => pc.cyan(a.displayName)).join(", ")}`);
   } else {
-    p.log.info("No IDE agents detected (Cursor, Claude Code).");
+    p.log.info("No IDE agents detected (Cursor, Claude Code, OpenCode).");
   }
 
   // -- Resolve or provision credentials -----------------------------------
@@ -87,7 +85,7 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
         if (!writeConfig || p.isCancel(writeConfig)) continue;
       }
 
-      await writeMcpConfig(agent, auth.apiKey!);
+      await writeMcpConfigForAgent(agent, auth.apiKey!);
       p.log.success(`${agent.displayName}: ${pc.dim(agent.configPath)} updated`);
     }
   }
@@ -103,28 +101,4 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
   p.log.info(`Run ${pc.cyan("dgrep claim")} to link this key to your Docfork account.`);
 
   p.outro("Setup complete.");
-}
-
-async function writeMcpConfig(agent: DetectedAgent, apiKey: string): Promise<void> {
-  const docforkServer = {
-    type: "streamable-http" as const,
-    url: `https://mcp.docfork.com?apiKey=${apiKey}`,
-  };
-
-  let existing: Record<string, unknown> = {};
-
-  try {
-    const raw = await readFile(agent.configPath, "utf-8");
-    existing = JSON.parse(raw) as Record<string, unknown>;
-    // Backup before modifying
-    await copyFile(agent.configPath, agent.configPath + ".bak");
-  } catch {
-    // File doesn't exist, start fresh
-  }
-
-  const mcpServers = (existing.mcpServers ?? {}) as Record<string, unknown>;
-  mcpServers["docfork"] = docforkServer;
-
-  const updated = { ...existing, mcpServers };
-  await writeFile(agent.configPath, JSON.stringify(updated, null, 2) + "\n");
 }
