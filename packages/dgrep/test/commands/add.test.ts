@@ -3,6 +3,8 @@ import { join } from "node:path";
 import { mkdtemp, rm, mkdir, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 
+const lib = (pkg: string, id?: string) => ({ package: pkg, identifier: id ?? pkg });
+
 let tempDir: string;
 
 beforeEach(async () => {
@@ -22,14 +24,14 @@ describe("add command", () => {
     await add("react", { yes: true, cwd: tempDir });
 
     const config = JSON.parse(await readFile(join(tempDir, ".dgrep", "config.json"), "utf-8"));
-    expect(config.libraries).toContain("react");
+    expect(config.libraries.some((l: { identifier: string }) => l.identifier === "react")).toBe(true);
   });
 
   it("is idempotent — skips if already tracked", async () => {
     await mkdir(join(tempDir, ".dgrep"));
     await writeFile(
       join(tempDir, ".dgrep", "config.json"),
-      JSON.stringify({ libraries: ["react"] }),
+      JSON.stringify({ libraries: [lib("react")] }),
     );
 
     const output: string[] = [];
@@ -38,16 +40,15 @@ describe("add command", () => {
     const { add } = await import("../../src/commands/add.js");
     await add("react", { yes: true, cwd: tempDir });
 
-    // Should not error, config unchanged
     const config = JSON.parse(await readFile(join(tempDir, ".dgrep", "config.json"), "utf-8"));
-    expect(config.libraries).toEqual(["react"]);
+    expect(config.libraries).toEqual([lib("react")]);
   });
 
   it("appends and sorts alphabetically", async () => {
     await mkdir(join(tempDir, ".dgrep"));
     await writeFile(
       join(tempDir, ".dgrep", "config.json"),
-      JSON.stringify({ libraries: ["react"] }),
+      JSON.stringify({ libraries: [lib("react")] }),
     );
 
     vi.spyOn(console, "log").mockImplementation(() => {});
@@ -56,7 +57,7 @@ describe("add command", () => {
     await add("express", { yes: true, cwd: tempDir });
 
     const config = JSON.parse(await readFile(join(tempDir, ".dgrep", "config.json"), "utf-8"));
-    expect(config.libraries).toEqual(["express", "react"]);
+    expect(config.libraries).toEqual([lib("express"), lib("react")]);
   });
 
   it("resolves owner/repo as github source", async () => {
@@ -66,6 +67,6 @@ describe("add command", () => {
     await add("vercel/next.js", { yes: true, cwd: tempDir });
 
     const config = JSON.parse(await readFile(join(tempDir, ".dgrep", "config.json"), "utf-8"));
-    expect(config.libraries).toContain("vercel/next.js");
+    expect(config.libraries.some((l: { identifier: string }) => l.identifier === "vercel/next.js")).toBe(true);
   });
 });

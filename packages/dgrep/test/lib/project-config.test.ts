@@ -9,6 +9,8 @@ import {
   findProjectRoot,
 } from "../../src/lib/project-config.js";
 
+const lib = (pkg: string, id?: string) => ({ package: pkg, identifier: id ?? pkg });
+
 let tempDir: string;
 
 beforeEach(async () => {
@@ -58,10 +60,10 @@ describe("loadProjectConfig", () => {
     await mkdir(join(tempDir, ".dgrep"));
     await writeFile(
       join(tempDir, ".dgrep", "config.json"),
-      JSON.stringify({ libraries: ["react", "next.js"] }),
+      JSON.stringify({ libraries: [lib("react"), lib("next.js", "vercel/next.js")] }),
     );
     const config = await loadProjectConfig(tempDir);
-    expect(config?.libraries).toEqual(["react", "next.js"]);
+    expect(config?.libraries).toEqual([lib("react"), lib("next.js", "vercel/next.js")]);
   });
 
   it("reads cabinet from config", async () => {
@@ -77,20 +79,20 @@ describe("loadProjectConfig", () => {
 
 describe("saveProjectConfig", () => {
   it("creates .dgrep/ dir and writes config.json", async () => {
-    await saveProjectConfig(tempDir, { libraries: ["react"] });
+    await saveProjectConfig(tempDir, { libraries: [lib("react", "facebook/react")] });
     const content = JSON.parse(await readFile(join(tempDir, ".dgrep", "config.json"), "utf-8"));
-    expect(content.libraries).toEqual(["react"]);
+    expect(content.libraries).toEqual([lib("react", "facebook/react")]);
   });
 
   it("overwrites existing config", async () => {
     await mkdir(join(tempDir, ".dgrep"));
     await writeFile(
       join(tempDir, ".dgrep", "config.json"),
-      JSON.stringify({ libraries: ["old"] }),
+      JSON.stringify({ libraries: [lib("old")] }),
     );
-    await saveProjectConfig(tempDir, { libraries: ["new"] });
+    await saveProjectConfig(tempDir, { libraries: [lib("new")] });
     const content = JSON.parse(await readFile(join(tempDir, ".dgrep", "config.json"), "utf-8"));
-    expect(content.libraries).toEqual(["new"]);
+    expect(content.libraries).toEqual([lib("new")]);
   });
 });
 
@@ -98,40 +100,40 @@ describe("addLibraryToProject", () => {
   it("adds library to empty config", async () => {
     await addLibraryToProject(tempDir, "react");
     const content = JSON.parse(await readFile(join(tempDir, ".dgrep", "config.json"), "utf-8"));
-    expect(content.libraries).toEqual(["react"]);
+    expect(content.libraries).toEqual([lib("react")]);
   });
 
   it("appends and sorts", async () => {
     await mkdir(join(tempDir, ".dgrep"));
     await writeFile(
       join(tempDir, ".dgrep", "config.json"),
-      JSON.stringify({ libraries: ["react"] }),
+      JSON.stringify({ libraries: [lib("react", "facebook/react")] }),
     );
     await addLibraryToProject(tempDir, "express");
     const content = JSON.parse(await readFile(join(tempDir, ".dgrep", "config.json"), "utf-8"));
-    expect(content.libraries).toEqual(["express", "react"]);
+    expect(content.libraries).toEqual([lib("express"), lib("react", "facebook/react")]);
   });
 
   it("deduplicates", async () => {
     await mkdir(join(tempDir, ".dgrep"));
     await writeFile(
       join(tempDir, ".dgrep", "config.json"),
-      JSON.stringify({ libraries: ["react"] }),
+      JSON.stringify({ libraries: [lib("react")] }),
     );
     await addLibraryToProject(tempDir, "react");
     const content = JSON.parse(await readFile(join(tempDir, ".dgrep", "config.json"), "utf-8"));
-    expect(content.libraries).toEqual(["react"]);
+    expect(content.libraries).toEqual([lib("react")]);
   });
 
   it("preserves cabinet field", async () => {
     await mkdir(join(tempDir, ".dgrep"));
     await writeFile(
       join(tempDir, ".dgrep", "config.json"),
-      JSON.stringify({ cabinet: "acme", libraries: ["react"] }),
+      JSON.stringify({ cabinet: "acme", libraries: [lib("react", "facebook/react")] }),
     );
     await addLibraryToProject(tempDir, "express");
     const content = JSON.parse(await readFile(join(tempDir, ".dgrep", "config.json"), "utf-8"));
     expect(content.cabinet).toBe("acme");
-    expect(content.libraries).toEqual(["express", "react"]);
+    expect(content.libraries).toEqual([lib("express"), lib("react", "facebook/react")]);
   });
 });

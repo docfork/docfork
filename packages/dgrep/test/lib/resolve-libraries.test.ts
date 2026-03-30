@@ -4,6 +4,8 @@ import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolveLibraries } from "../../src/lib/resolve-libraries.js";
 
+const lib = (pkg: string, id?: string) => ({ package: pkg, identifier: id ?? pkg });
+
 let tempDir: string;
 
 beforeEach(async () => {
@@ -25,11 +27,11 @@ describe("resolveLibraries", () => {
     await mkdir(join(tempDir, ".dgrep"));
     await writeFile(
       join(tempDir, ".dgrep", "config.json"),
-      JSON.stringify({ libraries: ["react", "typescript"] }),
+      JSON.stringify({ libraries: [lib("react", "facebook/react"), lib("typescript")] }),
     );
 
     const result = await resolveLibraries({ cwd: tempDir });
-    expect(result.libraries).toEqual(["react", "typescript"]);
+    expect(result.libraries).toEqual(["facebook/react", "typescript"]);
     expect(result.source).toBe("project");
   });
 
@@ -59,7 +61,7 @@ describe("resolveLibraries", () => {
     await mkdir(join(tempDir, ".dgrep"));
     await writeFile(
       join(tempDir, ".dgrep", "config.json"),
-      JSON.stringify({ libraries: ["react"] }),
+      JSON.stringify({ libraries: [lib("react", "facebook/react")] }),
     );
 
     const result = await resolveLibraries({ libraries: ["express"], cwd: tempDir });

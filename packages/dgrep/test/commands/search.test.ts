@@ -34,7 +34,7 @@ describe("search command", () => {
     await mkdir(join(tempDir, ".dgrep"));
     await writeFile(
       join(tempDir, ".dgrep", "config.json"),
-      JSON.stringify({ libraries: ["react"] }),
+      JSON.stringify({ libraries: [{ package: "react", identifier: "react" }] }),
     );
 
     const { search } = await import("../../src/commands/search.js");
@@ -58,7 +58,7 @@ describe("search command", () => {
     const config = JSON.parse(
       await readFile(join(tempDir, ".dgrep", "config.json"), "utf-8"),
     );
-    expect(config.libraries).toContain("react");
+    expect(config.libraries.some((l: { identifier: string }) => l.identifier === "react")).toBe(true);
 
     vi.restoreAllMocks();
   });
