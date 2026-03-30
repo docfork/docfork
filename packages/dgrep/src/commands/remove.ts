@@ -21,7 +21,8 @@ export async function remove(library: string, options: RemoveOptions = {}): Prom
   const config = await loadProjectConfig(projectRoot);
   const libs = config?.libraries ?? [];
 
-  if (!libs.includes(library)) {
+  const match = libs.find((l) => l.package === library || l.identifier === library);
+  if (!match) {
     p.log.info(`${accent().fg(library)} is not tracked. Nothing to remove.`);
     return;
   }
@@ -36,7 +37,7 @@ export async function remove(library: string, options: RemoveOptions = {}): Prom
     }
   }
 
-  const updated = libs.filter((l) => l !== library);
+  const updated = libs.filter((l) => l.package !== library && l.identifier !== library);
   await saveProjectConfig(projectRoot, { ...config, libraries: updated });
 
   p.log.success(`Removed ${accent().fg(library)} from .dgrep/config.json`);

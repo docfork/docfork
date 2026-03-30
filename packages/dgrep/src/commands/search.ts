@@ -2,7 +2,7 @@ import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { resolveAuth } from "../lib/auth.js";
-import { searchDocs } from "../lib/api-client.js";
+import { searchDocs, batchSearchDocs } from "../lib/api-client.js";
 import type { SearchSection } from "../lib/api-client.js";
 import { resolveLibraries } from "../lib/resolve-libraries.js";
 import { addLibraryToProject, findProjectRoot } from "../lib/project-config.js";
@@ -66,18 +66,36 @@ export async function search(query: string, options: SearchOptions = {}): Promis
   }
 
   const results: MergedResult[] = [];
-  const searchPromises = resolved.libraries.map(async (library) => {
-    try {
-      const response = await searchDocs(query, library, auth);
-      return response.sections.map((section) => ({ section, library }));
-    } catch {
-      return [];
-    }
-  });
 
-  const allResults = await Promise.all(searchPromises);
-  for (const batch of allResults) {
-    results.push(...batch);
+  // batch search: 1 request for all libraries (uses POST /v1/search)
+  // falls back to parallel GET requests if batch fails
+  try {
+    const specifiers = resolved.libraries.map((lib) =>
+      lib.includes("@") ? lib : `${lib}@latest`
+    );
+    const batchResponse = await batchSearchDocs(query, specifiers, auth);
+
+    for (const r of batchResponse.data ?? []) {
+      results.push({
+        section: { title: r.title, url: r.url, description: r.content?.slice(0, 200) ?? "" },
+        library: r.library,
+      });
+    }
+  } catch {
+    // fallback: parallel per-library search (legacy GET /v1/search)
+    const searchPromises = resolved.libraries.map(async (library) => {
+      try {
+        const response = await searchDocs(query, library, auth);
+        return response.sections.map((section) => ({ section, library }));
+      } catch {
+        return [];
+      }
+    });
+
+    const allResults = await Promise.all(searchPromises);
+    for (const batch of allResults) {
+      results.push(...batch);
+    }
   }
 
   // -- Output -----------------------------------

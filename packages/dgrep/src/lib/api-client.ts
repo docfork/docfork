@@ -63,7 +63,95 @@ async function get<T>(
   return (await response.json()) as T;
 }
 
-// -- Search docs -----------------------------------
+async function post<T>(
+  path: string,
+  body: unknown,
+  auth?: DgrepAuthConfig
+): Promise<T> {
+  const url = `${API_URL}${path}`;
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: headers(auth),
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new NetworkError("Could not reach api.docfork.com. Check your connection.");
+  }
+
+  if (!response.ok) {
+    const text = await response.text();
+    if (response.status === 401) {
+      throw new AuthError("Invalid API key. Run `dgrep login` to authenticate.");
+    }
+    if (response.status === 404) {
+      throw new NotFoundError(text.slice(0, 200) || "Resource not found.");
+    }
+    if (response.status === 429) {
+      throw new RateLimitError("Rate limit reached. Log in for 1K/mo free: `dgrep login`");
+    }
+    throw new Error(`${response.status} ${response.statusText}: ${text.slice(0, 500)}`);
+  }
+
+  return (await response.json()) as T;
+}
+
+// -- Resolve packages -----------------------------------
+
+export interface ResolvedPackage {
+  package: string;
+  identifier: string;
+  title?: string;
+  status: string;
+}
+
+export interface ResolvePackagesResponse {
+  resolved: ResolvedPackage[];
+  unresolved: string[];
+}
+
+export async function resolvePackages(
+  packages: string[],
+  auth?: DgrepAuthConfig
+): Promise<ResolvePackagesResponse> {
+  return post<ResolvePackagesResponse>(
+    "/libraries/resolve",
+    { packages, registry: "npm" },
+    auth
+  );
+}
+
+// -- Batch search -----------------------------------
+
+export interface BatchSearchResult {
+  content: string;
+  title: string;
+  path: string;
+  url: string;
+  library: string;
+  score: number;
+}
+
+export interface BatchSearchResponse {
+  data: BatchSearchResult[];
+}
+
+export async function batchSearchDocs(
+  query: string,
+  libraries: string[],
+  auth?: DgrepAuthConfig,
+  topK?: number
+): Promise<BatchSearchResponse> {
+  return post<BatchSearchResponse>(
+    "/search",
+    { query, libraries, top_k: topK ?? 10 },
+    auth
+  );
+}
+
+// -- Search docs (legacy, single library) -----------------------------------
 
 export interface SearchSection {
   url: string;

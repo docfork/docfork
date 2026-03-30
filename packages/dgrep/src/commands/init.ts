@@ -3,7 +3,10 @@ import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { join } from "node:path";
 import { loadProjectConfig, saveProjectConfig } from "../lib/project-config.js";
+import type { ResolvedLibrary } from "../lib/project-config.js";
 import { detectProjectDeps } from "../lib/detect-deps.js";
+import { resolvePackages } from "../lib/api-client.js";
+import { resolveAuth } from "../lib/auth.js";
 
 export interface InitOptions {
   yes?: boolean;
@@ -87,9 +90,42 @@ export async function init(options: InitOptions = {}): Promise<void> {
   }
 
   const sorted = selected.sort();
-  await saveProjectConfig(detected.root, { ...existing, libraries: sorted });
 
-  p.log.success(`Tracking ${accent().fg(String(sorted.length))} libraries`);
+  // resolve npm names → Docfork identifiers
+  const auth = await resolveAuth();
+  // default: unresolved entries use package name as identifier fallback
+  let resolvedLibraries: ResolvedLibrary[] = sorted.map((s) => ({ package: s, identifier: s }));
+
+  try {
+    const spinner = p.spinner();
+    spinner.start("Resolving libraries against Docfork catalog...");
+    const result = await resolvePackages(sorted, auth);
+    spinner.stop("Resolution complete");
+
+    if (result.resolved.length > 0) {
+      resolvedLibraries = result.resolved.map((r) => ({
+        package: r.package,
+        identifier: r.identifier,
+      }));
+
+      for (const r of result.resolved) {
+        p.log.message(`  ${pc.green("✓")} ${r.package} → ${accent().fg(r.identifier)}`);
+      }
+    }
+
+    if (result.unresolved.length > 0) {
+      for (const u of result.unresolved) {
+        p.log.message(`  ${pc.yellow("✗")} ${u} — ${pc.dim("not in catalog")}`);
+      }
+    }
+  } catch {
+    // resolve failed (no auth, network, etc.) — save raw npm names as fallback
+    p.log.warning("Could not resolve against catalog. Saving raw package names.");
+  }
+
+  await saveProjectConfig(detected.root, { ...existing, libraries: resolvedLibraries });
+
+  p.log.success(`Tracking ${accent().fg(String(resolvedLibraries.length))} libraries`);
   p.log.message(`  ${pc.dim("→")} ${configPath}`);
   p.outro(`Run ${accent().fg("dgrep search")} to search your stack.`);
 }

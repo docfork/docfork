@@ -1,4 +1,4 @@
-import { findProjectRoot, loadProjectConfig } from "./project-config.js";
+import { findProjectRoot, loadProjectConfig, getLibraryIdentifiers } from "./project-config.js";
 import { detectProjectDeps } from "./detect-deps.js";
 
 export type LibrarySource = "flag" | "project" | "detected" | "catalog";
@@ -24,13 +24,13 @@ export async function resolveLibraries(options: ResolveOptions = {}): Promise<Re
     };
   }
 
-  // Tier 2: .dgrep/config.json
+  // Tier 2: .dgrep/config.json — extract identifiers (handles both old and new format)
   const projectRoot = await findProjectRoot(cwd);
   if (projectRoot) {
     const config = await loadProjectConfig(projectRoot);
     if (config?.libraries && config.libraries.length > 0) {
       return {
-        libraries: config.libraries,
+        libraries: getLibraryIdentifiers(config),
         source: "project",
       };
     }

@@ -2,9 +2,26 @@ import { readFile, writeFile, mkdir, access } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { constants } from "node:fs";
 
+export interface ResolvedLibrary {
+  package: string;
+  identifier: string;
+}
+
 export interface ProjectConfig {
-  libraries?: string[];
+  libraries?: ResolvedLibrary[];
   cabinet?: string;
+}
+
+/** extract searchable identifiers from config */
+export function getLibraryIdentifiers(config: ProjectConfig): string[] {
+  if (!config.libraries) return [];
+  return config.libraries.map((lib) => lib.identifier);
+}
+
+/** extract raw package names from config */
+export function getPackageNames(config: ProjectConfig): string[] {
+  if (!config.libraries) return [];
+  return config.libraries.map((lib) => lib.package);
 }
 
 const CONFIG_DIR = ".dgrep";
@@ -52,15 +69,21 @@ export async function saveProjectConfig(projectRoot: string, config: ProjectConf
   await writeFile(join(dir, CONFIG_FILE), JSON.stringify(config, null, 2) + "\n");
 }
 
-export async function addLibraryToProject(projectRoot: string, library: string): Promise<boolean> {
+export async function addLibraryToProject(
+  projectRoot: string,
+  library: string | ResolvedLibrary,
+): Promise<boolean> {
   const config = (await loadProjectConfig(projectRoot)) ?? {};
   const libraries = config.libraries ?? [];
 
-  if (libraries.includes(library)) {
+  const entry: ResolvedLibrary =
+    typeof library === "string" ? { package: library, identifier: library } : library;
+
+  if (libraries.some((l) => l.identifier === entry.identifier)) {
     return false; // already tracked
   }
 
-  const updated = [...libraries, library].sort();
+  const updated = [...libraries, entry].sort((a, b) => a.package.localeCompare(b.package));
   await saveProjectConfig(projectRoot, { ...config, libraries: updated });
   return true;
 }
