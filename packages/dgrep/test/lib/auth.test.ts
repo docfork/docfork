@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+vi.mock("../../src/lib/config.js", () => ({
+  loadConfig: vi.fn().mockResolvedValue({}),
+  saveConfig: vi.fn(),
+  configPath: vi.fn().mockReturnValue("/tmp/.dgrep/config.json"),
+}));
+
 beforeEach(() => {
   vi.unstubAllEnvs();
 });

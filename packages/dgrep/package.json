@@ -1,7 +1,7 @@
 {
   "name": "dgrep",
   "version": "0.1.0",
-  "description": "Docfork documentation grounding CLI",
+  "description": "The Context CLI for AI Agents",
   "type": "module",
   "bin": {
     "dgrep": "dist/bin.mjs"

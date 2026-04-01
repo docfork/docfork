@@ -58,7 +58,7 @@ Docfork MCP server supporting stdio and HTTP transports. Published to npm as `do
 
 ### dgrep CLI (`packages/dgrep/`)
 
-Documentation grounding CLI. Alpha stage. Uses obuild for single-file bundling (zero runtime node_modules). Has its own standalone API client — will migrate to ConnectRPC when api-v2 is ready.
+Documentation context CLI. Alpha stage. Uses obuild for single-file bundling (zero runtime node_modules). Has its own standalone API client — will migrate to ConnectRPC when api-v2 is ready.
 
 ## Code Style
 
