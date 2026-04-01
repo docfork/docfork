@@ -17,3 +17,6 @@ key.pem
 
 # pnpm
 .pnpm-store/
+
+# npm link
+packages/dgrep/bin/

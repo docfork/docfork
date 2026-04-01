@@ -1,0 +1,100 @@
+{
+  "libraries": [
+    {
+      "package": "@clack/prompts",
+      "identifier": "@clack/prompts"
+    },
+    {
+      "package": "@lucide/lab",
+      "identifier": "@lucide/lab"
+    },
+    {
+      "package": "@modelcontextprotocol/inspector",
+      "identifier": "@modelcontextprotocol/inspector"
+    },
+    {
+      "package": "@modelcontextprotocol/sdk",
+      "identifier": "@modelcontextprotocol/sdk"
+    },
+    {
+      "package": "@tailwindcss/postcss",
+      "identifier": "@tailwindcss/postcss"
+    },
+    {
+      "package": "@takumi-rs/core",
+      "identifier": "@takumi-rs/core"
+    },
+    {
+      "package": "@takumi-rs/image-response",
+      "identifier": "@takumi-rs/image-response"
+    },
+    {
+      "package": "@vercel/analytics",
+      "identifier": "@vercel/analytics"
+    },
+    {
+      "package": "dotenv",
+      "identifier": "dotenv"
+    },
+    {
+      "package": "fumadocs-core",
+      "identifier": "fumadocs-core"
+    },
+    {
+      "package": "fumadocs-mdx",
+      "identifier": "fumadocs-mdx"
+    },
+    {
+      "package": "fumadocs-ui",
+      "identifier": "fumadocs-ui"
+    },
+    {
+      "package": "gray-matter",
+      "identifier": "gray-matter"
+    },
+    {
+      "package": "jose",
+      "identifier": "jose"
+    },
+    {
+      "package": "lucide-react",
+      "identifier": "lucide-react"
+    },
+    {
+      "package": "next",
+      "identifier": "next"
+    },
+    {
+      "package": "picocolors",
+      "identifier": "picocolors"
+    },
+    {
+      "package": "postcss",
+      "identifier": "postcss"
+    },
+    {
+      "package": "react",
+      "identifier": "react"
+    },
+    {
+      "package": "react-dom",
+      "identifier": "react-dom"
+    },
+    {
+      "package": "tailwind-merge",
+      "identifier": "tailwind-merge"
+    },
+    {
+      "package": "tailwindcss",
+      "identifier": "tailwindcss"
+    },
+    {
+      "package": "yargs",
+      "identifier": "yargs"
+    },
+    {
+      "package": "zod",
+      "identifier": "zod"
+    }
+  ]
+}
