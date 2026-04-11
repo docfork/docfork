@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0](https://github.com/docfork/docfork/compare/docfork-v2.1.0...docfork-v2.2.0) (2026-04-11)
+
+
+### Features
+
+* **docs:** update content and dependencies ([8e93e42](https://github.com/docfork/docfork/commit/8e93e42b8aaaaa593befceb636b8b7a9c9855e64))
+* **mcp:** update MCP tools to v5 (improved chaining and descriptions) ([9998829](https://github.com/docfork/docfork/commit/9998829497597dd4f3174117ec6ddae4c1692fc2))
+* **mcp:** v2.0.0 - Sharper tools, precise retrieval ([4a9e096](https://github.com/docfork/docfork/commit/4a9e0967f30bebea47f57081e23313d03636d06a))
+* update MCP tools to v5 (improved chaining and descriptions) ([1cf8760](https://github.com/docfork/docfork/commit/1cf87609f5db8a36255c28fa7268fd8379203052))
+
 ## [2.1.0] - 2026-03-04 — MCP tools v5
 
 ### Added
