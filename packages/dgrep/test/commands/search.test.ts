@@ -34,7 +34,7 @@ describe("search command", () => {
     await mkdir(join(tempDir, ".dgrep"));
     await writeFile(
       join(tempDir, ".dgrep", "config.json"),
-      JSON.stringify({ libraries: [{ package: "react", identifier: "react" }] }),
+      JSON.stringify({ libraries: [{ identifier: "react", packages: ["react"] }] }),
     );
 
     const { search } = await import("../../src/commands/search.js");

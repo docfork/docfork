@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { mkdtemp, rm, mkdir, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 
-const lib = (pkg: string, id?: string) => ({ package: pkg, identifier: id ?? pkg });
+const lib = (pkg: string, id?: string) => ({ identifier: id ?? pkg, packages: [pkg] });
 
 let tempDir: string;
 

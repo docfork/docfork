@@ -44,12 +44,12 @@ describe("resolveAuth", () => {
     expect(auth.apiKey).toBe("docf_from_flag");
   });
 
-  it("returns empty when nothing configured", async () => {
+  it("auto-provisions key when nothing configured", async () => {
     vi.stubEnv("DOCFORK_API_KEY", "");
 
     const { resolveAuth } = await import("../../src/lib/auth.js");
     const auth = await resolveAuth();
 
-    expect(auth.apiKey).toBeUndefined();
+    expect(auth.apiKey).toBe("docf_test_key_123");
   });
 });

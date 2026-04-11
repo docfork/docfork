@@ -9,7 +9,7 @@ import {
   findProjectRoot,
 } from "../../src/lib/project-config.js";
 
-const lib = (pkg: string, id?: string) => ({ package: pkg, identifier: id ?? pkg });
+const lib = (pkg: string, id?: string) => ({ identifier: id ?? pkg, packages: [pkg] });
 
 let tempDir: string;
 
@@ -111,7 +111,10 @@ describe("addLibraryToProject", () => {
     );
     await addLibraryToProject(tempDir, "express");
     const content = JSON.parse(await readFile(join(tempDir, ".dgrep", "config.json"), "utf-8"));
-    expect(content.libraries).toEqual([lib("express"), lib("react", "facebook/react")]);
+    expect(content.libraries).toEqual([
+      { identifier: "express", packages: ["express"] },
+      { identifier: "facebook/react", packages: ["react"] },
+    ]);
   });
 
   it("deduplicates", async () => {
@@ -134,6 +137,9 @@ describe("addLibraryToProject", () => {
     await addLibraryToProject(tempDir, "express");
     const content = JSON.parse(await readFile(join(tempDir, ".dgrep", "config.json"), "utf-8"));
     expect(content.cabinet).toBe("acme");
-    expect(content.libraries).toEqual([lib("express"), lib("react", "facebook/react")]);
+    expect(content.libraries).toEqual([
+      { identifier: "express", packages: ["express"] },
+      { identifier: "facebook/react", packages: ["react"] },
+    ]);
   });
 });
