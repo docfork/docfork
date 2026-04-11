@@ -1,5 +1,5 @@
 import { exec } from "node:child_process";
-import { NetworkError } from "./errors.js";
+import { AuthError, NetworkError } from "./errors.js";
 
 // -- Types -----------------------------------
 
@@ -44,7 +44,13 @@ export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`Device code request failed: ${response.status} ${text.slice(0, 200)}`);
+    let message = `Authentication service unavailable (${response.status})`;
+    try {
+      const json = JSON.parse(text);
+      const msg = json?.error_description ?? json?.message;
+      if (typeof msg === "string") message = msg;
+    } catch { /* not JSON */ }
+    throw new AuthError(message);
   }
 
   return (await response.json()) as DeviceCodeResponse;
@@ -96,17 +102,17 @@ export async function pollForToken(
     }
 
     if (body.error === "expired_token") {
-      throw new Error("Code expired. Run `dgrep login` again.");
+      throw new AuthError("Code expired. Run `dgrep login` again.");
     }
 
     if (body.error === "access_denied") {
-      throw new Error("Authentication rejected by user.");
+      throw new AuthError("Authentication rejected.");
     }
 
-    throw new Error(`Authentication failed: ${body.error} — ${body.error_description ?? ""}`);
+    throw new AuthError(`Authentication failed: ${body.error} — ${body.error_description ?? ""}`);
   }
 
-  throw new Error("Timed out waiting for authentication. Run `dgrep login` again.");
+  throw new AuthError("Timed out waiting for authentication. Run `dgrep login` again.");
 }
 
 // -- Browser -----------------------------------

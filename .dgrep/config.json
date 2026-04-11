@@ -1,100 +1,74 @@
 {
   "libraries": [
     {
-      "package": "@clack/prompts",
-      "identifier": "@clack/prompts"
+      "identifier": "bombshell-dev/clack",
+      "packages": [
+        "@clack/prompts"
+      ]
     },
     {
-      "package": "@lucide/lab",
-      "identifier": "@lucide/lab"
+      "identifier": "colinhacks/zod",
+      "packages": [
+        "zod"
+      ]
     },
     {
-      "package": "@modelcontextprotocol/inspector",
-      "identifier": "@modelcontextprotocol/inspector"
+      "identifier": "facebook/react",
+      "packages": [
+        "react",
+        "react-dom"
+      ]
     },
     {
-      "package": "@modelcontextprotocol/sdk",
-      "identifier": "@modelcontextprotocol/sdk"
+      "identifier": "fuma-nama/fumadocs",
+      "packages": [
+        "fumadocs-core",
+        "fumadocs-mdx",
+        "fumadocs-ui"
+      ]
     },
     {
-      "package": "@tailwindcss/postcss",
-      "identifier": "@tailwindcss/postcss"
+      "identifier": "lucide-icons/lucide",
+      "packages": [
+        "lucide-react"
+      ]
     },
     {
-      "package": "@takumi-rs/core",
-      "identifier": "@takumi-rs/core"
+      "identifier": "modelcontextprotocol/typescript-sdk",
+      "packages": [
+        "@modelcontextprotocol/sdk"
+      ]
     },
     {
-      "package": "@takumi-rs/image-response",
-      "identifier": "@takumi-rs/image-response"
+      "identifier": "motdotla/dotenv",
+      "packages": [
+        "dotenv"
+      ]
     },
     {
-      "package": "@vercel/analytics",
-      "identifier": "@vercel/analytics"
+      "identifier": "panva/jose",
+      "packages": [
+        "jose"
+      ]
     },
     {
-      "package": "dotenv",
-      "identifier": "dotenv"
+      "identifier": "postcss/postcss",
+      "packages": [
+        "postcss"
+      ]
     },
     {
-      "package": "fumadocs-core",
-      "identifier": "fumadocs-core"
+      "identifier": "tailwindlabs/tailwindcss",
+      "packages": [
+        "@tailwindcss/postcss",
+        "tailwindcss"
+      ]
     },
     {
-      "package": "fumadocs-mdx",
-      "identifier": "fumadocs-mdx"
-    },
-    {
-      "package": "fumadocs-ui",
-      "identifier": "fumadocs-ui"
-    },
-    {
-      "package": "gray-matter",
-      "identifier": "gray-matter"
-    },
-    {
-      "package": "jose",
-      "identifier": "jose"
-    },
-    {
-      "package": "lucide-react",
-      "identifier": "lucide-react"
-    },
-    {
-      "package": "next",
-      "identifier": "next"
-    },
-    {
-      "package": "picocolors",
-      "identifier": "picocolors"
-    },
-    {
-      "package": "postcss",
-      "identifier": "postcss"
-    },
-    {
-      "package": "react",
-      "identifier": "react"
-    },
-    {
-      "package": "react-dom",
-      "identifier": "react-dom"
-    },
-    {
-      "package": "tailwind-merge",
-      "identifier": "tailwind-merge"
-    },
-    {
-      "package": "tailwindcss",
-      "identifier": "tailwindcss"
-    },
-    {
-      "package": "yargs",
-      "identifier": "yargs"
-    },
-    {
-      "package": "zod",
-      "identifier": "zod"
+      "identifier": "vercel/next.js",
+      "packages": [
+        "next"
+      ]
     }
   ]
 }

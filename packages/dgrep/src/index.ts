@@ -33,7 +33,11 @@ export type {
 
 // Output
 export { jsonLine, jsonResults, jsonError } from "./lib/output.js";
-export type { JsonOutput, JsonResult, JsonError, JsonMeta } from "./lib/output.js";
+export type { JsonOutput, JsonResult, JsonError, JsonMeta, JsonReadMeta, JsonReadContent } from "./lib/output.js";
+
+// Stats
+export { loadStats, incrementSearches, incrementReads } from "./lib/stats.js";
+export type { LibraryStats, StatsFile } from "./lib/stats.js";
 
 // Errors
 export {

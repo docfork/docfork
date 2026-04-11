@@ -1,11 +1,25 @@
 import { AuthError, NetworkError, NotFoundError, RateLimitError } from "./errors.js";
 
-const API_URL = "https://api.docfork.com/v1";
+export const API_URL = "https://api.docfork.com/v1";
 const VERSION = "0.1.0";
 
 export interface DgrepAuthConfig {
   apiKey?: string;
   cabinet?: string;
+}
+
+/** Extract a human-readable message from an API error response body */
+export function parseErrorMessage(text: string, status: number, statusText: string): string {
+  try {
+    const json = JSON.parse(text);
+    // nested: { error: { message } } or flat: { message } or { error: "...", message: "..." }
+    const msg =
+      json?.error?.message ?? json?.message ?? json?.error;
+    if (typeof msg === "string") return msg;
+  } catch {
+    // not JSON
+  }
+  return text.slice(0, 200) || `${status} ${statusText}`;
 }
 
 function headers(auth?: DgrepAuthConfig): Record<string, string> {
@@ -52,12 +66,12 @@ async function get<T>(
       throw new AuthError("Invalid API key. Run `dgrep login` to authenticate.");
     }
     if (response.status === 404) {
-      throw new NotFoundError(text.slice(0, 200) || "Resource not found.");
+      throw new NotFoundError(parseErrorMessage(text, 404, "Not Found"));
     }
     if (response.status === 429) {
       throw new RateLimitError("Rate limit reached. Log in for 1K/mo free: `dgrep login`");
     }
-    throw new Error(`${response.status} ${response.statusText}: ${text.slice(0, 500)}`);
+    throw new Error(parseErrorMessage(text, response.status, response.statusText));
   }
 
   return (await response.json()) as T;
@@ -87,12 +101,12 @@ async function post<T>(
       throw new AuthError("Invalid API key. Run `dgrep login` to authenticate.");
     }
     if (response.status === 404) {
-      throw new NotFoundError(text.slice(0, 200) || "Resource not found.");
+      throw new NotFoundError(parseErrorMessage(text, 404, "Not Found"));
     }
     if (response.status === 429) {
       throw new RateLimitError("Rate limit reached. Log in for 1K/mo free: `dgrep login`");
     }
-    throw new Error(`${response.status} ${response.statusText}: ${text.slice(0, 500)}`);
+    throw new Error(parseErrorMessage(text, response.status, response.statusText));
   }
 
   return (await response.json()) as T;
@@ -135,18 +149,35 @@ export interface BatchSearchResult {
 }
 
 export interface BatchSearchResponse {
-  data: BatchSearchResult[];
+  object: string;
+  results: BatchSearchResult[];
+  meta: {
+    query: string;
+    libraries: {
+      resolved: string[];
+      unresolved: string[];
+    };
+    reranked: boolean;
+    usage: {
+      chunks_searched: number;
+      chunks_returned: number;
+      embedding_tokens: number;
+    };
+    performance: {
+      latency_ms: number;
+    };
+  };
 }
 
 export async function batchSearchDocs(
   query: string,
   libraries: string[],
   auth?: DgrepAuthConfig,
-  topK?: number
+  limit?: number
 ): Promise<BatchSearchResponse> {
   return post<BatchSearchResponse>(
     "/search",
-    { query, libraries, top_k: topK ?? 10 },
+    { query, libraries, limit: limit ?? 10 },
     auth
   );
 }
@@ -180,8 +211,50 @@ export interface ReadUrlResponse {
   version_info: string;
 }
 
-export async function readUrl(url: string, auth?: DgrepAuthConfig): Promise<ReadUrlResponse> {
-  return get<ReadUrlResponse>("/read", { url }, auth);
+export async function readUrl(
+  url: string,
+  auth?: DgrepAuthConfig,
+  tokens?: number,
+): Promise<ReadUrlResponse> {
+  const params: Record<string, string> = { url };
+  if (tokens) params.tokens = String(tokens);
+  return get<ReadUrlResponse>("/read", params, auth);
+}
+
+// -- Key exchange (login) -----------------------------------
+
+export interface ExchangeResponse {
+  apiKey: string;
+  email: string;
+  orgName: string;
+  orgSlug: string;
+}
+
+export async function exchangeKey(
+  workosAccessToken: string,
+  unclaimedApiKey?: string,
+): Promise<ExchangeResponse> {
+  return post<ExchangeResponse>(
+    "/keys/exchange",
+    {
+      workosAccessToken,
+      ...(unclaimedApiKey ? { unclaimedApiKey } : {}),
+    },
+  );
+}
+
+// -- Key provision (wizard) -----------------------------------
+
+export interface ProvisionResponse {
+  api_key: string;
+  key_prefix: string;
+  organization_id: string;
+  expires_at: string;
+  claim_url: string;
+}
+
+export async function provisionKey(): Promise<ProvisionResponse> {
+  return post<ProvisionResponse>("/keys/provision", {});
 }
 
 // -- Search catalog -----------------------------------

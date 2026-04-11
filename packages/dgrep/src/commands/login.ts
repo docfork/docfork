@@ -3,9 +3,8 @@ import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { loadConfig, saveConfig } from "../lib/config.js";
 import { requestDeviceCode, pollForToken, openBrowser } from "../lib/device-flow.js";
-import { NetworkError } from "../lib/errors.js";
-
-const API_URL = "https://api.docfork.com/v1";
+import { exchangeKey } from "../lib/api-client.js";
+import type { ExchangeResponse } from "../lib/api-client.js";
 
 export async function login(): Promise<void> {
   p.intro(accent().bg(pc.black(" dgrep login ")));
@@ -18,7 +17,7 @@ export async function login(): Promise<void> {
     return;
   }
 
-  // -- Device flow (works with or without existing key) -----------------------------------
+  // -- Device flow -----------------------------------
 
   const spinner = p.spinner();
   spinner.start("Requesting authentication code...");
@@ -59,42 +58,47 @@ export async function login(): Promise<void> {
   const claimSpinner = p.spinner();
   claimSpinner.start("Getting your API key...");
 
-  let apiKey: string | undefined;
+  let result: ExchangeResponse;
   try {
-    const response = await fetch(`${API_URL}/keys/exchange`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        workosAccessToken: token.access_token,
-        ...(config.apiKey ? { unclaimedApiKey: config.apiKey } : {}),
-      }),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      claimSpinner.stop("Failed.");
-      throw new Error(`Login failed: ${response.status} ${text.slice(0, 200)}`);
-    }
-
-    const result = (await response.json()) as Record<string, unknown>;
-    apiKey = (result.apiKey ?? result.api_key ?? result.key ?? config.apiKey) as string | undefined;
+    result = await exchangeKey(token.access_token, config.apiKey);
   } catch (err) {
-    if (err instanceof TypeError) {
+    // 409 = key already claimed — retry without unclaimed key for fresh key + profile
+    const is409 =
+      err instanceof Error && err.message.includes("already claimed") && config.apiKey;
+
+    if (is409) {
+      try {
+        result = await exchangeKey(token.access_token);
+      } catch {
+        // retry also failed — mark as claimed with what we have
+        await saveConfig({
+          ...config,
+          claimedAt: config.claimedAt ?? new Date().toISOString(),
+        });
+        claimSpinner.stop("Already linked.");
+        p.outro(`Your key is already linked. Run ${accent().fg("dgrep status")} to verify.`);
+        return;
+      }
+    } else {
       claimSpinner.stop("Failed.");
-      throw new NetworkError("Could not reach api.docfork.com. Check your connection.");
+      throw err;
     }
-    throw err;
   }
 
   // -- Save -----------------------------------
 
   await saveConfig({
-    apiKey,
+    apiKey: result.apiKey,
+    email: result.email,
+    orgName: result.orgName,
+    orgSlug: result.orgSlug,
     cabinet: config.cabinet,
     claimedAt: new Date().toISOString(),
   });
 
   claimSpinner.stop("Logged in.");
 
-  p.outro(`${pc.green("Done!")} You're logged in to Docfork.`);
+  const identity = result.email ? ` as ${accent().fg(result.email)}` : "";
+  const workspace = result.orgName ? ` (${result.orgName})` : "";
+  p.outro(`${pc.green("Done!")} Logged in${identity}${workspace}`);
 }

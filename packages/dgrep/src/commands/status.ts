@@ -48,6 +48,9 @@ export async function status(options: StatusOptions = {}): Promise<void> {
         auth: {
           hasApiKey,
           isClaimed,
+          email: userConfig.email ?? null,
+          orgName: userConfig.orgName ?? null,
+          orgSlug: userConfig.orgSlug ?? null,
           keyPrefix,
           expiresAt: userConfig.expiresAt ?? null,
           cabinet: userConfig.cabinet ?? null,
@@ -91,7 +94,12 @@ export async function status(options: StatusOptions = {}): Promise<void> {
   }
 
   if (isClaimed) {
-    console.log(`  ${label("Account")}${pc.green("✓")} claimed`);
+    const acct = userConfig.email || "linked";
+    console.log(`  ${label("Account")}${pc.green("✓")} ${acct}`);
+    if (userConfig.orgName) {
+      const slug = userConfig.orgSlug ? pc.dim(` (${userConfig.orgSlug})`) : "";
+      console.log(`  ${label("Workspace")}${userConfig.orgName}${slug}`);
+    }
   } else if (hasApiKey) {
     console.log(
       `  ${label("Account")}${pc.yellow("⚠")} unclaimed — run ${accent().fg("dgrep login")}`
@@ -117,7 +125,8 @@ export async function status(options: StatusOptions = {}): Promise<void> {
   // Libraries
   if (libs.length > 0) {
     const MAX_SHOW = 10;
-    const shown = libs.slice(0, MAX_SHOW).join(", ");
+    const names = libs.map((l) => l.identifier);
+    const shown = names.slice(0, MAX_SHOW).join(", ");
     const suffix = libs.length > MAX_SHOW ? ` ${pc.dim(`(+${libs.length - MAX_SHOW} more)`)}` : "";
     console.log(`  ${label("Libraries")}${shown}${suffix} (${libs.length} tracked)`);
     console.log(`  ${label("Source")}.dgrep/config.json`);

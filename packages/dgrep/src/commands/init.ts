@@ -13,10 +13,33 @@ export interface InitOptions {
   cwd?: string;
 }
 
+const LOGO_LINES = [
+  "██████╗   ██████╗  ██████╗  ███████╗ ██████╗",
+  "██╔══██╗ ██╔════╝  ██╔══██╗ ██╔════╝ ██╔══██╗",
+  "██║  ██║ ██║  ███╗ ██████╔╝ █████╗   ██████╔╝",
+  "██║  ██║ ██║   ██║ ██╔══██╗ ██╔══╝   ██╔═══╝",
+  "██████╔╝ ╚██████╔╝ ██║  ██║ ███████╗ ██║",
+  "╚═════╝   ╚═════╝  ╚═╝  ╚═╝ ╚══════╝ ╚═╝",
+];
+
+const GRADIENT = [
+  "\x1b[38;2;255;120;1m",
+  "\x1b[38;2;255;96;19m",
+  "\x1b[38;2;255;72;37m",
+  "\x1b[38;2;255;48;55m",
+  "\x1b[38;2;255;24;74m",
+  "\x1b[38;2;255;1;93m",
+];
+const RESET = "\x1b[0m";
+
 export async function init(options: InitOptions = {}): Promise<void> {
   const cwd = options.cwd ?? process.cwd();
 
-  p.intro(accent().bg(pc.black(" dgrep init ")));
+  console.log();
+  for (let i = 0; i < LOGO_LINES.length; i++) {
+    console.log(`  ${GRADIENT[i]}${LOGO_LINES[i]}${RESET}`);
+  }
+  console.log(`  ${pc.dim("Docs search for AI agents by Docfork")}`);
 
   // -- Detect project -----------------------------------
 
@@ -25,47 +48,61 @@ export async function init(options: InitOptions = {}): Promise<void> {
 
   if (detected.isMonorepo) {
     p.log.step(
-      `Project: ${accent().fg(detected.root)} (monorepo, ${detected.packageCount} packages)`
+      `Project: ${accent().fg(detected.root)} (monorepo, ${detected.packageCount} packages)`,
     );
   } else {
     p.log.step(`Project: ${accent().fg(detected.root)}`);
   }
 
-  // Check if already initialized
+  // Check if already initialized — merge mode
   const existing = await loadProjectConfig(detected.root);
-  if (existing?.libraries && existing.libraries.length > 0) {
-    p.log.warning(
-      `Already tracking ${existing.libraries.length} libraries: ${accent().fg(existing.libraries.join(", "))}`
-    );
-    if (!options.yes) {
-      const overwrite = await p.confirm({ message: "Overwrite?" });
-      if (!overwrite || p.isCancel(overwrite)) {
-        p.outro("Cancelled.");
-        return;
-      }
-    }
-  }
+  const existingIdentifiers = new Set(existing?.libraries?.map((l) => l.identifier) ?? []);
 
   // -- Show detected deps -----------------------------------
 
   const skipped = detected.totalBeforeFilter - detected.deps.length;
 
   if (detected.deps.length === 0) {
-    p.log.info(
-      skipped > 0
-        ? `No library dependencies found (skipped ${skipped} build tools).`
-        : "No dependencies detected."
-    );
-    await saveProjectConfig(detected.root, { libraries: [] });
-    p.log.message(`  ${pc.dim("→")} ${configPath}`);
-    p.outro(`Run ${accent().fg("dgrep add <library>")} to track libraries.`);
+    if (existingIdentifiers.size > 0) {
+      p.log.info(`Tracking ${existingIdentifiers.size} libraries. No new dependencies detected.`);
+      p.outro(`Run ${accent().fg("dgrep add <library>")} to add more.`);
+    } else {
+      p.log.info(
+        skipped > 0
+          ? `No library dependencies found (skipped ${skipped} build tools).`
+          : "No dependencies detected.",
+      );
+      await saveProjectConfig(detected.root, { libraries: [] });
+      p.log.message(`  ${pc.dim("→")} ${configPath}`);
+      p.outro(`Run ${accent().fg("dgrep add <library>")} to track libraries.`);
+    }
     return;
   }
 
+  // filter out deps already tracked (by package name)
+  const existingPackages = new Set(existing?.libraries?.flatMap((l) => l.packages) ?? []);
+  const newDeps = detected.deps.filter((d) => !existingPackages.has(d));
+
+  if (existingIdentifiers.size > 0) {
+    p.log.info(`Already tracking ${existingIdentifiers.size} libraries`);
+  }
+
+  if (newDeps.length === 0 && existingIdentifiers.size > 0) {
+    p.log.info("No new dependencies to add.");
+    p.outro(`Run ${accent().fg("dgrep add <library>")} to add more.`);
+    return;
+  }
+
+  const depsToShow = newDeps.length > 0 ? newDeps : detected.deps;
+  const label =
+    newDeps.length > 0 && existingIdentifiers.size > 0
+      ? `${accent().fg(String(newDeps.length))} new dependencies`
+      : `${accent().fg(String(depsToShow.length))} dependencies`;
+
   p.log.step(
-    `Detected ${accent().fg(String(detected.deps.length))} dependencies` +
+    `Detected ${label}` +
       (skipped > 0 ? ` ${pc.dim(`(skipped ${skipped} build tools)`)}` : "") +
-      `:\n  ${accent().fg(detected.deps.join(", "))}`
+      `:\n  ${accent().fg(depsToShow.join(", "))}`,
   );
 
   // -- Select -----------------------------------
@@ -73,12 +110,15 @@ export async function init(options: InitOptions = {}): Promise<void> {
   let selected: string[];
 
   if (options.yes) {
-    selected = detected.deps;
+    selected = depsToShow;
   } else {
     const result = await p.multiselect({
-      message: "Which libraries should dgrep track?",
-      options: detected.deps.map((dep) => ({ value: dep, label: dep })),
-      initialValues: detected.deps,
+      message:
+        existingIdentifiers.size > 0
+          ? "Which new libraries should dgrep track?"
+          : "Which libraries should dgrep track?",
+      options: depsToShow.map((dep) => ({ value: dep, label: dep })),
+      initialValues: depsToShow,
     });
 
     if (p.isCancel(result)) {
@@ -94,7 +134,10 @@ export async function init(options: InitOptions = {}): Promise<void> {
   // resolve npm names → Docfork identifiers
   const auth = await resolveAuth();
   // default: unresolved entries use package name as identifier fallback
-  let resolvedLibraries: ResolvedLibrary[] = sorted.map((s) => ({ package: s, identifier: s }));
+  let resolvedLibraries: ResolvedLibrary[] = sorted.map((s) => ({
+    identifier: s,
+    packages: [s],
+  }));
 
   try {
     const spinner = p.spinner();
@@ -103,9 +146,16 @@ export async function init(options: InitOptions = {}): Promise<void> {
     spinner.stop("Resolution complete");
 
     if (result.resolved.length > 0) {
-      resolvedLibraries = result.resolved.map((r) => ({
-        package: r.package,
-        identifier: r.identifier,
+      // group resolved packages by identifier
+      const grouped = new Map<string, string[]>();
+      for (const r of result.resolved) {
+        const pkgs = grouped.get(r.identifier) ?? [];
+        pkgs.push(r.package);
+        grouped.set(r.identifier, pkgs);
+      }
+      resolvedLibraries = [...grouped.entries()].map(([identifier, packages]) => ({
+        identifier,
+        packages: packages.sort(),
       }));
 
       for (const r of result.resolved) {
@@ -123,9 +173,30 @@ export async function init(options: InitOptions = {}): Promise<void> {
     p.log.warning("Could not resolve against catalog. Saving raw package names.");
   }
 
-  await saveProjectConfig(detected.root, { ...existing, libraries: resolvedLibraries });
+  // merge with existing libraries (additive, never removes)
+  const mergedLibraries = [...(existing?.libraries ?? [])];
+  for (const lib of resolvedLibraries) {
+    const existingLib = mergedLibraries.find((l) => l.identifier === lib.identifier);
+    if (existingLib) {
+      // merge packages into existing entry
+      const allPkgs = new Set([...existingLib.packages, ...lib.packages]);
+      existingLib.packages = [...allPkgs].sort();
+    } else {
+      mergedLibraries.push(lib);
+    }
+  }
+  mergedLibraries.sort((a, b) => a.identifier.localeCompare(b.identifier));
 
-  p.log.success(`Tracking ${accent().fg(String(resolvedLibraries.length))} libraries`);
+  await saveProjectConfig(detected.root, { ...existing, libraries: mergedLibraries });
+
+  const added = resolvedLibraries.filter((l) => !existingIdentifiers.has(l.identifier)).length;
+  const total = mergedLibraries.length;
+  const msg =
+    added > 0 && existingIdentifiers.size > 0
+      ? `Added ${added} new, tracking ${accent().fg(String(total))} libraries total`
+      : `Tracking ${accent().fg(String(total))} libraries`;
+
+  p.log.success(msg);
   p.log.message(`  ${pc.dim("→")} ${configPath}`);
   p.outro(`Run ${accent().fg("dgrep search")} to search your stack.`);
 }

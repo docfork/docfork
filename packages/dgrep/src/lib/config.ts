@@ -4,9 +4,13 @@ import { homedir } from "node:os";
 
 export interface DgrepConfig {
   apiKey?: string;
+  email?: string;
+  orgName?: string;
+  orgSlug?: string;
   cabinet?: string;
   claimedAt?: string;
   expiresAt?: string;
+  accentColor?: string;
 }
 
 const CONFIG_DIR = join(homedir(), ".dgrep");

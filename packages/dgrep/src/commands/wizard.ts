@@ -4,9 +4,7 @@ import pc from "picocolors";
 import { resolveAuth } from "../lib/auth.js";
 import { saveConfig } from "../lib/config.js";
 import { detectAgents, writeMcpConfigForAgent } from "../lib/agents.js";
-import { NetworkError } from "../lib/errors.js";
-
-const API_URL = "https://api.docfork.com/v1";
+import { provisionKey } from "../lib/api-client.js";
 
 export interface WizardOptions {
   yes?: boolean;
@@ -43,41 +41,20 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
     const provisionSpinner = p.spinner();
     provisionSpinner.start("Provisioning...");
 
-    try {
-      const response = await fetch(`${API_URL}/keys/provision`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+    const result = await provisionKey();
+    apiKey = result.api_key;
 
-      if (!response.ok) {
-        provisionSpinner.stop("Failed.");
-        const text = await response.text();
-        throw new Error(`Provision failed: ${response.status} ${text.slice(0, 200)}`);
-      }
-
-      const result = (await response.json()) as Record<string, unknown>;
-      // Backend may return apiKey or api_key
-      apiKey = (result.apiKey ?? result.api_key ?? result.key) as string | undefined;
-
-      if (!apiKey) {
-        provisionSpinner.stop("Failed.");
-        p.log.error(`Unexpected provision response: ${JSON.stringify(result).slice(0, 200)}`);
-        throw new Error("Provision response missing API key.");
-      }
-
-      await saveConfig({
-        apiKey,
-        expiresAt: (result.expiresAt ?? result.expires_at) as string | undefined,
-      });
-
-      provisionSpinner.stop("API key provisioned.");
-    } catch (err) {
-      if (err instanceof TypeError) {
-        provisionSpinner.stop("Failed.");
-        throw new NetworkError("Could not reach api.docfork.com. Check your connection.");
-      }
-      throw err;
+    if (!apiKey) {
+      provisionSpinner.stop("Failed.");
+      throw new Error("Provision response missing API key. Try again or run `dgrep login`.");
     }
+
+    await saveConfig({
+      apiKey,
+      expiresAt: result.expires_at,
+    });
+
+    provisionSpinner.stop("API key provisioned.");
   }
 
   // -- Write MCP configs -----------------------------------

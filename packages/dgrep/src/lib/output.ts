@@ -24,7 +24,20 @@ export interface JsonMeta {
   count: number;
 }
 
-export type JsonOutput = JsonResult | JsonError | JsonMeta;
+export interface JsonReadMeta {
+  type: "read_meta";
+  url: string;
+  library: string;
+  tokens: number;
+  source: string;
+}
+
+export interface JsonReadContent {
+  type: "content";
+  text: string;
+}
+
+export type JsonOutput = JsonResult | JsonError | JsonMeta | JsonReadMeta | JsonReadContent;
 
 export function jsonLine(obj: JsonOutput): void {
   console.log(JSON.stringify(obj));

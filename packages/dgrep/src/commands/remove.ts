@@ -21,7 +21,9 @@ export async function remove(library: string, options: RemoveOptions = {}): Prom
   const config = await loadProjectConfig(projectRoot);
   const libs = config?.libraries ?? [];
 
-  const match = libs.find((l) => l.package === library || l.identifier === library);
+  const match = libs.find(
+    (l) => l.identifier === library || l.packages.includes(library),
+  );
   if (!match) {
     p.log.info(`${accent().fg(library)} is not tracked. Nothing to remove.`);
     return;
@@ -29,7 +31,7 @@ export async function remove(library: string, options: RemoveOptions = {}): Prom
 
   if (!options.yes) {
     const confirm = await p.confirm({
-      message: `Remove ${library} from tracked libraries?`,
+      message: `Remove ${match.identifier} from tracked libraries?`,
     });
     if (!confirm || p.isCancel(confirm)) {
       p.outro("Cancelled.");
@@ -37,7 +39,7 @@ export async function remove(library: string, options: RemoveOptions = {}): Prom
     }
   }
 
-  const updated = libs.filter((l) => l.package !== library && l.identifier !== library);
+  const updated = libs.filter((l) => l.identifier !== match.identifier);
   await saveProjectConfig(projectRoot, { ...config, libraries: updated });
 
   p.log.success(`Removed ${accent().fg(library)} from .dgrep/config.json`);

@@ -28,7 +28,13 @@ export async function list(options: ListOptions = {}): Promise<void> {
   }
 
   for (const lib of libs) {
-    console.log(`  ${lib}`);
+    const pkgInfo =
+      lib.packages.length > 1
+        ? pc.dim(` (${lib.packages.join(", ")})`)
+        : lib.packages[0] !== lib.identifier
+          ? pc.dim(` (${lib.packages[0]})`)
+          : "";
+    console.log(`  ${lib.identifier}${pkgInfo}`);
   }
   console.log(`\n${libs.length} libraries tracked in .dgrep/config.json`);
 }

@@ -10,14 +10,54 @@ async function main() {
   await yargs(hideBin(process.argv))
     .scriptName("dgrep")
     .usage("$0 [command]")
-    .command("$0", "Interactive setup wizard", {}, async () => {
-      const { wizard } = await import("./commands/wizard.js");
-      await wizard();
+    .command("$0", "Initialize dgrep in current project", {}, async (argv) => {
+      const { findProjectRoot, loadProjectConfig } = await import("./lib/project-config.js");
+      const cwd = process.cwd();
+      const projectRoot = await findProjectRoot(cwd);
+      const config = projectRoot ? await loadProjectConfig(projectRoot) : null;
+
+      if (config?.libraries && config.libraries.length > 0) {
+        // already initialized — show compact status
+        const pc = (await import("picocolors")).default;
+        console.log("");
+        console.log(`  ${pc.bold("dgrep")} ${pc.dim("v0.1.0")} — ${config.libraries.length} libraries tracked`);
+        console.log("");
+        console.log(`  ${pc.dim("dgrep search <query>")}    Search documentation`);
+        console.log(`  ${pc.dim("dgrep read <url>")}        Read content`);
+        console.log(`  ${pc.dim("dgrep setup")}             Setup IDE agents`);
+        console.log(`  ${pc.dim("dgrep status")}            Show configuration`);
+        console.log(`  ${pc.dim("dgrep init")}              Re-initialize project`);
+        console.log("");
+      } else {
+        const { init } = await import("./commands/init.js");
+        await init({ yes: argv.yes as boolean | undefined });
+      }
     })
-    .command("init", "Initialize dgrep in current project", {}, async () => {
+    .command("init", "Initialize dgrep in current project", {}, async (argv) => {
       const { init } = await import("./commands/init.js");
-      await init();
+      await init({ yes: argv.yes as boolean | undefined });
     })
+    .command(
+      "setup",
+      "Setup IDE agent integrations",
+      (yargs) => {
+        return yargs
+          .option("cursor", { type: "boolean", describe: "Setup Cursor only" })
+          .option("claude", { type: "boolean", describe: "Setup Claude Code only" })
+          .option("opencode", { type: "boolean", describe: "Setup OpenCode only" })
+          .option("all", { type: "boolean", describe: "Setup all detected agents" });
+      },
+      async (argv) => {
+        const { setup } = await import("./commands/setup.js");
+        await setup({
+          cursor: argv.cursor as boolean | undefined,
+          claude: argv.claude as boolean | undefined,
+          opencode: argv.opencode as boolean | undefined,
+          yes: argv.yes as boolean | undefined,
+          apiKey: argv["api-key"] as string | undefined,
+        });
+      }
+    )
     .command(
       "add <library>",
       "Add a library to your stack",
@@ -29,7 +69,9 @@ async function main() {
       },
       async (argv) => {
         const { add } = await import("./commands/add.js");
-        await add(argv.library as string);
+        await add(argv.library as string, {
+          yes: argv.yes as boolean | undefined,
+        });
       }
     )
     .command(
@@ -47,6 +89,11 @@ async function main() {
             array: true,
             describe: "Library to search (overrides auto-detection)",
           })
+          .option("limit", {
+            type: "number",
+            default: 10,
+            describe: "Maximum number of results to return",
+          })
           .option("save", {
             type: "boolean",
             default: true,
@@ -61,9 +108,39 @@ async function main() {
         const { search } = await import("./commands/search.js");
         await search(argv.query as string, {
           libraries: argv.library as string[] | undefined,
+          limit: argv.limit as number | undefined,
           json: argv.json as boolean | undefined,
           yes: argv.yes as boolean | undefined,
           noSave: argv.save === false,
+          apiKey: argv["api-key"] as string | undefined,
+          cabinet: argv.cabinet as string | undefined,
+        });
+      }
+    )
+    .command(
+      "read <url>",
+      "Read documentation content by URL",
+      (yargs) => {
+        return yargs
+          .positional("url", {
+            type: "string",
+            describe: "Documentation URL from search results",
+          })
+          .option("tokens", {
+            type: "number",
+            default: 20000,
+            describe: "Token budget for content length",
+          })
+          .option("cabinet", {
+            type: "string",
+            describe: "Org cabinet for private docs",
+          });
+      },
+      async (argv) => {
+        const { read } = await import("./commands/read.js");
+        await read(argv.url as string, {
+          json: argv.json as boolean | undefined,
+          tokens: argv.tokens as number | undefined,
           apiKey: argv["api-key"] as string | undefined,
           cabinet: argv.cabinet as string | undefined,
         });

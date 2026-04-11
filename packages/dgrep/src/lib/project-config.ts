@@ -3,8 +3,8 @@ import { join, dirname } from "node:path";
 import { constants } from "node:fs";
 
 export interface ResolvedLibrary {
-  package: string;
   identifier: string;
+  packages: string[];
 }
 
 export interface ProjectConfig {
@@ -12,16 +12,16 @@ export interface ProjectConfig {
   cabinet?: string;
 }
 
-/** extract searchable identifiers from config */
+/** extract unique searchable identifiers from config */
 export function getLibraryIdentifiers(config: ProjectConfig): string[] {
   if (!config.libraries) return [];
   return config.libraries.map((lib) => lib.identifier);
 }
 
-/** extract raw package names from config */
+/** extract all raw package names from config */
 export function getPackageNames(config: ProjectConfig): string[] {
   if (!config.libraries) return [];
-  return config.libraries.map((lib) => lib.package);
+  return config.libraries.flatMap((lib) => lib.packages);
 }
 
 const CONFIG_DIR = ".dgrep";
@@ -63,27 +63,55 @@ export async function loadProjectConfig(projectRoot: string): Promise<ProjectCon
   }
 }
 
+const GITIGNORE_CONTENT = "stats.json\n.cache/\n";
+
 export async function saveProjectConfig(projectRoot: string, config: ProjectConfig): Promise<void> {
   const dir = join(projectRoot, CONFIG_DIR);
-  await mkdir(dir, { recursive: true });
-  await writeFile(join(dir, CONFIG_FILE), JSON.stringify(config, null, 2) + "\n");
+  try {
+    await mkdir(dir, { recursive: true });
+    await writeFile(join(dir, CONFIG_FILE), JSON.stringify(config, null, 2) + "\n");
+    // ensure .gitignore exists for per-developer files
+    const gitignorePath = join(dir, ".gitignore");
+    try {
+      await access(gitignorePath, constants.F_OK);
+    } catch {
+      await writeFile(gitignorePath, GITIGNORE_CONTENT);
+    }
+  } catch (error) {
+    throw new Error(
+      `Failed to write ${CONFIG_DIR}/${CONFIG_FILE}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
 
 export async function addLibraryToProject(
   projectRoot: string,
-  library: string | ResolvedLibrary,
+  library: string | { identifier: string; package?: string },
 ): Promise<boolean> {
   const config = (await loadProjectConfig(projectRoot)) ?? {};
   const libraries = config.libraries ?? [];
 
-  const entry: ResolvedLibrary =
-    typeof library === "string" ? { package: library, identifier: library } : library;
+  const identifier = typeof library === "string" ? library : library.identifier;
+  const pkg = typeof library === "string" ? library : library.package;
 
-  if (libraries.some((l) => l.identifier === entry.identifier)) {
-    return false; // already tracked
+  const existing = libraries.find((l) => l.identifier === identifier);
+  if (existing) {
+    // merge package into existing entry if it's a real package name (not the identifier itself)
+    if (pkg && pkg !== identifier && !existing.packages.includes(pkg)) {
+      existing.packages = [...existing.packages, pkg].sort();
+      await saveProjectConfig(projectRoot, { ...config, libraries });
+    }
+    return false; // identifier already tracked
   }
 
-  const updated = [...libraries, entry].sort((a, b) => a.package.localeCompare(b.package));
+  const entry: ResolvedLibrary = {
+    identifier,
+    packages: pkg ? [pkg] : [],
+  };
+
+  const updated = [...libraries, entry].sort((a, b) =>
+    a.identifier.localeCompare(b.identifier),
+  );
   await saveProjectConfig(projectRoot, { ...config, libraries: updated });
   return true;
 }

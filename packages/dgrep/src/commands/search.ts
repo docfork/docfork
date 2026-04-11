@@ -2,15 +2,17 @@ import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { resolveAuth } from "../lib/auth.js";
-import { searchDocs, batchSearchDocs } from "../lib/api-client.js";
-import type { SearchSection } from "../lib/api-client.js";
+import { batchSearchDocs } from "../lib/api-client.js";
+import type { BatchSearchResult } from "../lib/api-client.js";
 import { resolveLibraries } from "../lib/resolve-libraries.js";
 import { addLibraryToProject, findProjectRoot } from "../lib/project-config.js";
 import { jsonLine } from "../lib/output.js";
 import type { JsonResult, JsonMeta } from "../lib/output.js";
+import { incrementSearches } from "../lib/stats.js";
 
 export interface SearchOptions {
   libraries?: string[];
+  limit?: number;
   json?: boolean;
   yes?: boolean;
   noSave?: boolean;
@@ -20,7 +22,7 @@ export interface SearchOptions {
 }
 
 interface MergedResult {
-  section: SearchSection;
+  section: { title: string; url: string; description: string };
   library: string;
 }
 
@@ -50,6 +52,19 @@ export async function search(query: string, options: SearchOptions = {}): Promis
     return;
   }
 
+  // -- Prune libraries (API max 20) -----------------------------------
+
+  const MAX_LIBRARIES = 20;
+  let searchLibraries = [...new Set(resolved.libraries)];
+
+  if (searchLibraries.length > MAX_LIBRARIES) {
+    const skipped = searchLibraries.length - MAX_LIBRARIES;
+    searchLibraries = searchLibraries.slice(0, MAX_LIBRARIES);
+    process.stderr.write(
+      `Searching ${MAX_LIBRARIES}/${resolved.libraries.length} libraries (${skipped} skipped). Use --library to override.\n`,
+    );
+  }
+
   // -- Search in parallel -----------------------------------
 
   if (!options.json) {
@@ -62,49 +77,33 @@ export async function search(query: string, options: SearchOptions = {}): Promis
             ? " (detected from package.json)"
             : " (catalog)";
 
-    p.log.step(`Searching: ${accent().fg(resolved.libraries.join(", "))}${pc.dim(sourceLabel)}`);
+    p.log.step(`Searching: ${accent().fg(searchLibraries.join(", "))}${pc.dim(sourceLabel)}`);
   }
 
   const results: MergedResult[] = [];
+  const limit = options.limit ?? 10;
 
-  // batch search: 1 request for all libraries (uses POST /v1/search)
-  // falls back to parallel GET requests if batch fails
-  try {
-    const specifiers = resolved.libraries.map((lib) =>
-      lib.includes("@") ? lib : `${lib}@latest`
-    );
-    const batchResponse = await batchSearchDocs(query, specifiers, auth);
+  const specifiers = searchLibraries.map((lib) =>
+    lib.includes("@") ? lib : `${lib}@latest`
+  );
+  const batchResponse = await batchSearchDocs(query, specifiers, auth, limit);
 
-    for (const r of batchResponse.data ?? []) {
-      results.push({
-        section: { title: r.title, url: r.url, description: r.content?.slice(0, 200) ?? "" },
-        library: r.library,
-      });
-    }
-  } catch {
-    // fallback: parallel per-library search (legacy GET /v1/search)
-    const searchPromises = resolved.libraries.map(async (library) => {
-      try {
-        const response = await searchDocs(query, library, auth);
-        return response.sections.map((section) => ({ section, library }));
-      } catch {
-        return [];
-      }
+  for (const r of batchResponse.results ?? []) {
+    results.push({
+      section: { title: r.title, url: r.url, description: r.content?.slice(0, 200) ?? "" },
+      library: r.library,
     });
-
-    const allResults = await Promise.all(searchPromises);
-    for (const batch of allResults) {
-      results.push(...batch);
-    }
   }
 
   // -- Output -----------------------------------
+
+  const uniqueLibraries = new Set(results.map((r) => r.library));
 
   if (options.json) {
     const meta: JsonMeta = {
       type: "meta",
       query,
-      libraries: resolved.libraries,
+      libraries: searchLibraries,
       source: resolved.source,
       count: results.length,
     };
@@ -120,6 +119,11 @@ export async function search(query: string, options: SearchOptions = {}): Promis
       };
       jsonLine(line);
     }
+
+    // stderr summary for agents (visible even when stdout is redirected)
+    process.stderr.write(
+      `Found ${results.length} results across ${uniqueLibraries.size} libraries\n`,
+    );
   } else {
     if (results.length === 0) {
       p.log.warning("No results found.");
@@ -131,31 +135,39 @@ export async function search(query: string, options: SearchOptions = {}): Promis
             `    ${pc.dim(r.library)} · ${pc.underline(r.section.url)}`
         );
       }
-      console.log(`\n${results.length} results across ${resolved.libraries.length} libraries`);
+      console.log(
+        `\n${results.length} of ${results.length} results. Use --limit for more.`,
+      );
     }
+  }
+
+  // -- Stats tracking (fire-and-forget) -----------------------------------
+
+  const projectRoot = (await findProjectRoot(cwd)) ?? cwd;
+  if (results.length > 0) {
+    incrementSearches(projectRoot, searchLibraries).catch(() => {});
   }
 
   // -- Remember pattern -----------------------------------
 
   if (resolved.source === "flag" && !options.noSave && options.libraries) {
-    const projectRoot = (await findProjectRoot(cwd)) ?? cwd;
-
+    const libsToSave = [...new Set(options.libraries)];
     if (options.yes) {
-      for (const lib of options.libraries) {
+      for (const lib of libsToSave) {
         await addLibraryToProject(projectRoot, lib);
       }
       if (!options.json) {
-        p.log.success(`Added ${accent().fg(options.libraries.join(", "))} to .dgrep/config.json`);
+        p.log.success(`Added ${accent().fg(libsToSave.join(", "))} to .dgrep/config.json`);
       }
     } else if (!options.json) {
       const save = await p.confirm({
-        message: `Remember ${options.libraries.join(", ")} for future searches?`,
+        message: `Remember ${libsToSave.join(", ")} for future searches?`,
       });
       if (save && !p.isCancel(save)) {
-        for (const lib of options.libraries) {
+        for (const lib of libsToSave) {
           await addLibraryToProject(projectRoot, lib);
         }
-        p.log.success(`Added ${accent().fg(options.libraries.join(", "))} to .dgrep/config.json`);
+        p.log.success(`Added ${accent().fg(libsToSave.join(", "))} to .dgrep/config.json`);
       }
     }
   }
