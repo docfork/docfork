@@ -1,0 +1,51 @@
+# Changelog
+
+## [0.1.1](https://github.com/docfork/docfork/compare/dgrep-v0.1.0...dgrep-v0.1.1) (2026-04-11)
+
+
+### Features
+
+* **dgrep:** 4-tier library resolution (flag → project → package.json → catalog) ([c40ed7c](https://github.com/docfork/docfork/commit/c40ed7c7dde57046bc8ba11feb264df35ad0eada))
+* **dgrep:** add color and doctor commands ([72af496](https://github.com/docfork/docfork/commit/72af49659708b88502b91d0b650c10afb863f156))
+* **dgrep:** add command (catalog resolve, idempotent, --yes) ([c7410eb](https://github.com/docfork/docfork/commit/c7410eb0436fc57599ca6c4aee846257a5c39a13))
+* **dgrep:** add dep-filter with pattern-based tooling exclusion ([ee4c98e](https://github.com/docfork/docfork/commit/ee4c98e234ff28140ae5d280ab64cd01bb65b7d3))
+* **dgrep:** add detect-deps with monorepo workspace aggregation ([ad2e9d1](https://github.com/docfork/docfork/commit/ad2e9d16c2f8535b1c5afcc5cf1cced13f0b9ee1))
+* **dgrep:** add list, remove commands + truncate status libraries at 10 ([c2308a3](https://github.com/docfork/docfork/commit/c2308a3386695a35a621c7854f75f852cb620984))
+* **dgrep:** add resolve + batch search, new config format ([c6b5b5e](https://github.com/docfork/docfork/commit/c6b5b5ec19e6b8a6242e77db6b659d043acbea0a))
+* **dgrep:** add status command (auth, project, libraries, agents, config paths) ([757ca04](https://github.com/docfork/docfork/commit/757ca0435e434dc7147843ff74faca43bdbb769d))
+* **dgrep:** agent detection (Cursor, Claude Code via filesystem probe) ([0298a41](https://github.com/docfork/docfork/commit/0298a41536d5dd71bcc2f0fd3c592353eb03653b))
+* **dgrep:** alpha release — init-first CLI with search, read, setup ([b015f97](https://github.com/docfork/docfork/commit/b015f97ee9cc0a2d5fa452b887b1242d48c70dd0))
+* **dgrep:** alpha release — search, read, setup, init-first hierarchy ([da2c512](https://github.com/docfork/docfork/commit/da2c5124a6e63556de0f91c24d84a2127fca4462))
+* **dgrep:** command stubs (wizard, init, add, search) ([1434a7d](https://github.com/docfork/docfork/commit/1434a7d880102dbc414ac59dfbae3a2222f0ae8c))
+* **dgrep:** config file I/O (~/.dgrep/config.json with 0o600 perms) ([e48977d](https://github.com/docfork/docfork/commit/e48977d4b008a106412cb628136808895cc127af))
+* **dgrep:** init command (package.json detection, interactive selection) ([2557cec](https://github.com/docfork/docfork/commit/2557cecef244d6bfa6a92b6fd0e31ffde94902f9))
+* **dgrep:** init resolves deps against remote Docfork catalog ([7b173b9](https://github.com/docfork/docfork/commit/7b173b98474c1b8ad9ea10c8f9b1c2b0fe3c79a7))
+* **dgrep:** lib stubs (auth, config, agents, providers) and barrel export ([dbe6df8](https://github.com/docfork/docfork/commit/dbe6df8d5fd7d0f463a29b07b3505ea8dda273f8))
+* **dgrep:** NDJSON output module for --json flag ([1d595f8](https://github.com/docfork/docfork/commit/1d595f838fe5dcb710da53ac00df6419f91e5f38))
+* **dgrep:** OAuth device flow and claim command ([b40b183](https://github.com/docfork/docfork/commit/b40b1834aa21c97c72aac684eddded9c7507b745))
+* **dgrep:** per-agent MCP config (Cursor, Claude Code, OpenCode) ([11935a5](https://github.com/docfork/docfork/commit/11935a5b7f4c58c5192c471c0a3a9303cf3b3f5d))
+* **dgrep:** project config (.dgrep/config.json with walk-up discovery) ([6fbbf6e](https://github.com/docfork/docfork/commit/6fbbf6ebcf4d107863f893d089367d99cf53f679))
+* **dgrep:** search command (parallel multi-lib, pretty + NDJSON, remember pattern) ([7031f10](https://github.com/docfork/docfork/commit/7031f10cc612251551bd00ac9c0d0b6ade6ae35c))
+* **dgrep:** set real WorkOS client ID for device flow ([1ff8e6a](https://github.com/docfork/docfork/commit/1ff8e6abcc222995682ec11e132074cbe00c2edf))
+* **dgrep:** standalone API client (v1 REST, isolated from MCP) ([9d7268a](https://github.com/docfork/docfork/commit/9d7268a7bb7b4883773182b73ff7ccb57e74a749))
+* **dgrep:** structured error handling with exit codes ([6c39ed1](https://github.com/docfork/docfork/commit/6c39ed130da95f7a1fe125043990e95eed5550d1))
+* **dgrep:** use POST /v1/keys/exchange for login, unclaimedApiKey optional ([46b1a49](https://github.com/docfork/docfork/commit/46b1a49cc93f9d2b9b3cf69ef46d0b78b77007fb))
+* **dgrep:** use remote MCP URL (mcp.docfork.com) instead of npx docfork@latest ([d17bb5d](https://github.com/docfork/docfork/commit/d17bb5dabff1ce3202f4c57975860af853aed750))
+* **dgrep:** wire up dynamic accent color across all commands ([5ea0af3](https://github.com/docfork/docfork/commit/5ea0af3a650c4b77f7cea3bab6ce68ce67d1f05a))
+* **dgrep:** wizard (provision key, detect agents, write MCP configs) ([40ec6b9](https://github.com/docfork/docfork/commit/40ec6b9ed5230a792502c4db1081b69ef8526d5d))
+
+
+### Bug Fixes
+
+* **dgrep:** add -h alias for --help ([660f047](https://github.com/docfork/docfork/commit/660f047dbf0bf3e4b5a17803b333616c72ab085b))
+* **dgrep:** correct WorkOS device flow endpoints and content type ([1677129](https://github.com/docfork/docfork/commit/16771299bb587f3d7adb6677f6f4744d667e9838))
+* **dgrep:** fix undefined apiKey in wizard manual command display ([19e3af0](https://github.com/docfork/docfork/commit/19e3af03ad6bdcd572f3ff05a72a884ffab73f93))
+* **dgrep:** login preserves API key on claim, logout checks claimedAt ([4c6ade4](https://github.com/docfork/docfork/commit/4c6ade479fa2ecaec8f3159a808ad81dc6b6442e))
+* **dgrep:** login works standalone without unclaimed key, default accent blueBright ([ffb00e1](https://github.com/docfork/docfork/commit/ffb00e1547066d81ebe84a4d1630a2acc1058d61))
+* **dgrep:** mock loadConfig in auth test to prevent pollution, update description ([4e9ba98](https://github.com/docfork/docfork/commit/4e9ba9809caabc98dfead841cf1ac70ba744ef97))
+* **dgrep:** remove unused imports (lint) ([714919e](https://github.com/docfork/docfork/commit/714919ea1edbb5f5173671fc55939f268ca93cee))
+* **dgrep:** rename --no-save to --save with boolean negation ([8f19a66](https://github.com/docfork/docfork/commit/8f19a66bebc8233ae1f962e6f9944a00d35d5f93))
+* **dgrep:** replace all stale dgrep claim references with dgrep login ([a33c9e2](https://github.com/docfork/docfork/commit/a33c9e2582f34cc2acb5d305a96fa829ea2b31eb))
+* **dgrep:** update tests for new config format + POST search + lazy auth ([bcd4c2d](https://github.com/docfork/docfork/commit/bcd4c2dbdb019c619c94d13c4e684e4dd6b3d651))
+* **dgrep:** update wizard test mock to match ProvisionResponse shape ([c633849](https://github.com/docfork/docfork/commit/c633849f837761c91a1f89a08825b08c3ba1b825))
+* **dgrep:** use http type for Claude Code MCP config per official docs ([3c9e542](https://github.com/docfork/docfork/commit/3c9e5425cb1e7ad204dd30c4fe0d0aaa44c12e07))
