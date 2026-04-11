@@ -1,6 +1,7 @@
 import pc from "picocolors";
 import { loadConfig, saveConfig } from "../lib/config.js";
 
+const DEFAULT_COLOR = "blue";
 const COLORS = ["cyan", "red", "green", "yellow", "blue", "magenta"] as const;
 type AccentColor = (typeof COLORS)[number];
 
@@ -15,15 +16,15 @@ const COLOR_FN: Record<AccentColor, (s: string) => string> = {
 
 export async function color(value?: string): Promise<void> {
   const config = await loadConfig();
-  const current = (config as Record<string, unknown>).accentColor as string | undefined;
+  const current = config.accentColor;
 
   // Show current + available
   if (!value) {
     console.log(`\n  ${pc.bold("dgrep color")}\n`);
-    console.log(`  Current: ${current ?? "red"} (default)\n`);
+    console.log(`  Current: ${current ?? `${DEFAULT_COLOR} (default)`}\n`);
     for (const c of COLORS) {
       const fn = COLOR_FN[c];
-      const marker = c === (current ?? "red") ? " ←" : "";
+      const marker = c === (current ?? DEFAULT_COLOR) ? " ←" : "";
       console.log(`  ${fn("■")} ${c}${pc.dim(marker)}`);
     }
     console.log(`\n  Usage: ${pc.dim("dgrep color <name>")}`);
@@ -33,9 +34,9 @@ export async function color(value?: string): Promise<void> {
 
   // Reset
   if (value === "default") {
-    const { accentColor: _, ...rest } = config as Record<string, unknown>;
-    await saveConfig(rest as Parameters<typeof saveConfig>[0]);
-    console.log(`  Accent color reset to ${pc.blueBright("blue")} (default)`);
+    const { accentColor: _, ...rest } = config;
+    await saveConfig(rest);
+    console.log(`  Accent color reset to ${pc.blueBright(DEFAULT_COLOR)} (default)`);
     return;
   }
 
@@ -48,7 +49,7 @@ export async function color(value?: string): Promise<void> {
   }
 
   // Save
-  await saveConfig({ ...config, accentColor: value } as Parameters<typeof saveConfig>[0]);
+  await saveConfig({ ...config, accentColor: value });
   const fn = COLOR_FN[value as AccentColor];
   console.log(`  Accent color set to ${fn(value)}`);
 }

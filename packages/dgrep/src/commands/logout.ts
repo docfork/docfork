@@ -12,7 +12,7 @@ export async function logout(options: LogoutOptions = {}): Promise<void> {
 
   const config = await loadConfig();
 
-  if (!config.apiKey && !config.claimedAt) {
+  if (!config.claimedAt) {
     p.log.info("Not logged in. Nothing to do.");
     p.outro("Done.");
     return;
@@ -20,7 +20,7 @@ export async function logout(options: LogoutOptions = {}): Promise<void> {
 
   if (!options.yes) {
     const confirm = await p.confirm({
-      message: "Clear your API key and log out?",
+      message: "Log out? Your API key will be kept.",
     });
     if (!confirm || p.isCancel(confirm)) {
       p.outro("Cancelled.");
@@ -28,7 +28,7 @@ export async function logout(options: LogoutOptions = {}): Promise<void> {
     }
   }
 
-  await saveConfig({});
-  p.log.success(`Credentials cleared from ${pc.dim(configPath())}`);
-  p.outro("Logged out.");
+  await saveConfig({ apiKey: config.apiKey, cabinet: config.cabinet });
+  p.log.success(`Logged out. API key kept in ${pc.dim(configPath())}`);
+  p.outro("Run " + accent().fg("dgrep login") + " to link your account again.");
 }

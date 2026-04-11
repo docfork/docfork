@@ -19,11 +19,31 @@ let cached: { fg: ColorFn; bg: ColorFn } | null = null;
 export async function loadAccent(): Promise<{ fg: ColorFn; bg: ColorFn }> {
   if (cached) return cached;
   const config = await loadConfig();
-  const name = (config as Record<string, unknown>).accentColor as string | undefined;
+  const name = config.accentColor;
   cached = ACCENT_FNS[name ?? DEFAULT] ?? ACCENT_FNS[DEFAULT];
   return cached;
 }
 
 export function accent(): { fg: ColorFn; bg: ColorFn } {
   return cached ?? ACCENT_FNS[DEFAULT];
+}
+
+// -- Banner -----------------------------------
+
+const LOGO_LINES = [
+  "     █████                                   ",
+  "    ██   ██  ██████  ██████  ██████ ██████   ",
+  "   ██   ██ ██      ██   ██ ██     ██   ██   ",
+  "  ██   ██ ██  ███ ██████  █████  ██████    ",
+  " ██   ██ ██   ██ ██  ██  ██     ██        ",
+  "█████   ██████ ██   ██ ██████ ██         ",
+];
+
+export function showBanner(): void {
+  const color = accent().fg;
+  console.log("");
+  for (const line of LOGO_LINES) {
+    console.log(`  ${color(line)}`);
+  }
+  console.log("");
 }

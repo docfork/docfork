@@ -32,9 +32,6 @@ export async function add(library: string, options: AddOptions = {}): Promise<vo
 
   if (added) {
     p.log.success(`Added ${accent().fg(library)} to .dgrep/config.json`);
-    console.log(`library: ${library}`);
-    console.log(`identifier: ${source.identifier}`);
-    console.log(`source: ${source.type}`);
   } else {
     p.log.info(`${accent().fg(library)} already tracked, skipping.`);
   }

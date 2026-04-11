@@ -6,11 +6,18 @@
   "bin": {
     "dgrep": "dist/bin.mjs"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "obuild src/bin.ts:dist",
+    "build": "obuild src/bin.ts:dist src/index.ts:dist && tsc --emitDeclarationOnly --outDir dist",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\" --fix --quiet --max-warnings=-1",
@@ -24,7 +31,6 @@
     "@clack/prompts": "^0.9",
     "@types/node": "25.2.3",
     "@types/yargs": "^17.0.35",
-    "gray-matter": "^4",
     "msw": "^2.12.14",
     "obuild": "latest",
     "picocolors": "^1",
