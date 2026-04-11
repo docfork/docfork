@@ -34,7 +34,8 @@ export async function color(value?: string): Promise<void> {
 
   // Reset
   if (value === "default") {
-    const { accentColor: _, ...rest } = config;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { accentColor, ...rest } = config;
     await saveConfig(rest);
     console.log(`  Accent color reset to ${pc.blueBright(DEFAULT_COLOR)} (default)`);
     return;

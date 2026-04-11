@@ -1,5 +1,5 @@
 import { readFile, readdir, access } from "node:fs/promises";
-import { join, dirname } from "node:path";
+import { join } from "node:path";
 import { constants } from "node:fs";
 import { isDevTool } from "./dep-filter.js";
 

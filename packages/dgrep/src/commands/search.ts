@@ -3,7 +3,6 @@ import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { resolveAuth } from "../lib/auth.js";
 import { batchSearchDocs } from "../lib/api-client.js";
-import type { BatchSearchResult } from "../lib/api-client.js";
 import { resolveLibraries } from "../lib/resolve-libraries.js";
 import { addLibraryToProject, findProjectRoot } from "../lib/project-config.js";
 import { jsonLine } from "../lib/output.js";

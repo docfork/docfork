@@ -1,6 +1,5 @@
 import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
-import pc from "picocolors";
 import { findProjectRoot, loadProjectConfig, saveProjectConfig } from "../lib/project-config.js";
 
 export interface RemoveOptions {
