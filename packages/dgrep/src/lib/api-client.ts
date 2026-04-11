@@ -13,8 +13,7 @@ export function parseErrorMessage(text: string, status: number, statusText: stri
   try {
     const json = JSON.parse(text);
     // nested: { error: { message } } or flat: { message } or { error: "...", message: "..." }
-    const msg =
-      json?.error?.message ?? json?.message ?? json?.error;
+    const msg = json?.error?.message ?? json?.message ?? json?.error;
     if (typeof msg === "string") return msg;
   } catch {
     // not JSON
@@ -77,11 +76,7 @@ async function get<T>(
   return (await response.json()) as T;
 }
 
-async function post<T>(
-  path: string,
-  body: unknown,
-  auth?: DgrepAuthConfig
-): Promise<T> {
+async function post<T>(path: string, body: unknown, auth?: DgrepAuthConfig): Promise<T> {
   const url = `${API_URL}${path}`;
 
   let response: Response;
@@ -130,11 +125,7 @@ export async function resolvePackages(
   packages: string[],
   auth?: DgrepAuthConfig
 ): Promise<ResolvePackagesResponse> {
-  return post<ResolvePackagesResponse>(
-    "/libraries/resolve",
-    { packages, registry: "npm" },
-    auth
-  );
+  return post<ResolvePackagesResponse>("/libraries/resolve", { packages, registry: "npm" }, auth);
 }
 
 // -- Batch search -----------------------------------
@@ -175,11 +166,7 @@ export async function batchSearchDocs(
   auth?: DgrepAuthConfig,
   limit?: number
 ): Promise<BatchSearchResponse> {
-  return post<BatchSearchResponse>(
-    "/search",
-    { query, libraries, limit: limit ?? 10 },
-    auth
-  );
+  return post<BatchSearchResponse>("/search", { query, libraries, limit: limit ?? 10 }, auth);
 }
 
 // -- Search docs (legacy, single library) -----------------------------------
@@ -214,7 +201,7 @@ export interface ReadUrlResponse {
 export async function readUrl(
   url: string,
   auth?: DgrepAuthConfig,
-  tokens?: number,
+  tokens?: number
 ): Promise<ReadUrlResponse> {
   const params: Record<string, string> = { url };
   if (tokens) params.tokens = String(tokens);
@@ -232,15 +219,12 @@ export interface ExchangeResponse {
 
 export async function exchangeKey(
   workosAccessToken: string,
-  unclaimedApiKey?: string,
+  unclaimedApiKey?: string
 ): Promise<ExchangeResponse> {
-  return post<ExchangeResponse>(
-    "/keys/exchange",
-    {
-      workosAccessToken,
-      ...(unclaimedApiKey ? { unclaimedApiKey } : {}),
-    },
-  );
+  return post<ExchangeResponse>("/keys/exchange", {
+    workosAccessToken,
+    ...(unclaimedApiKey ? { unclaimedApiKey } : {}),
+  });
 }
 
 // -- Key provision (wizard) -----------------------------------

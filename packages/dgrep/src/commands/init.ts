@@ -48,7 +48,7 @@ export async function init(options: InitOptions = {}): Promise<void> {
 
   if (detected.isMonorepo) {
     p.log.step(
-      `Project: ${accent().fg(detected.root)} (monorepo, ${detected.packageCount} packages)`,
+      `Project: ${accent().fg(detected.root)} (monorepo, ${detected.packageCount} packages)`
     );
   } else {
     p.log.step(`Project: ${accent().fg(detected.root)}`);
@@ -70,7 +70,7 @@ export async function init(options: InitOptions = {}): Promise<void> {
       p.log.info(
         skipped > 0
           ? `No library dependencies found (skipped ${skipped} build tools).`
-          : "No dependencies detected.",
+          : "No dependencies detected."
       );
       await saveProjectConfig(detected.root, { libraries: [] });
       p.log.message(`  ${pc.dim("→")} ${configPath}`);
@@ -102,7 +102,7 @@ export async function init(options: InitOptions = {}): Promise<void> {
   p.log.step(
     `Detected ${label}` +
       (skipped > 0 ? ` ${pc.dim(`(skipped ${skipped} build tools)`)}` : "") +
-      `:\n  ${accent().fg(depsToShow.join(", "))}`,
+      `:\n  ${accent().fg(depsToShow.join(", "))}`
   );
 
   // -- Select -----------------------------------

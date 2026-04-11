@@ -24,7 +24,9 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
   const apiKey = auth.apiKey;
 
   if (!apiKey) {
-    p.log.error(`No API key found. Run ${accent().fg("dgrep login")} or ${accent().fg("npx dgrep")} first.`);
+    p.log.error(
+      `No API key found. Run ${accent().fg("dgrep login")} or ${accent().fg("npx dgrep")} first.`
+    );
     process.exitCode = 1;
     return;
   }
@@ -65,7 +67,7 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
     if (!options.yes) {
       if (agent.name === "claude-code") {
         p.log.info(
-          `Or run manually:\n  ${accent().fg(`claude mcp add --transport http docfork https://mcp.docfork.com/mcp --header "DOCFORK_API_KEY: ${apiKey}"`)}`,
+          `Or run manually:\n  ${accent().fg(`claude mcp add --transport http docfork https://mcp.docfork.com/mcp --header "DOCFORK_API_KEY: ${apiKey}"`)}`
         );
       }
 

@@ -60,7 +60,7 @@ export async function search(query: string, options: SearchOptions = {}): Promis
     const skipped = searchLibraries.length - MAX_LIBRARIES;
     searchLibraries = searchLibraries.slice(0, MAX_LIBRARIES);
     process.stderr.write(
-      `Searching ${MAX_LIBRARIES}/${resolved.libraries.length} libraries (${skipped} skipped). Use --library to override.\n`,
+      `Searching ${MAX_LIBRARIES}/${resolved.libraries.length} libraries (${skipped} skipped). Use --library to override.\n`
     );
   }
 
@@ -82,9 +82,7 @@ export async function search(query: string, options: SearchOptions = {}): Promis
   const results: MergedResult[] = [];
   const limit = options.limit ?? 10;
 
-  const specifiers = searchLibraries.map((lib) =>
-    lib.includes("@") ? lib : `${lib}@latest`
-  );
+  const specifiers = searchLibraries.map((lib) => (lib.includes("@") ? lib : `${lib}@latest`));
   const batchResponse = await batchSearchDocs(query, specifiers, auth, limit);
 
   for (const r of batchResponse.results ?? []) {
@@ -121,7 +119,7 @@ export async function search(query: string, options: SearchOptions = {}): Promis
 
     // stderr summary for agents (visible even when stdout is redirected)
     process.stderr.write(
-      `Found ${results.length} results across ${uniqueLibraries.size} libraries\n`,
+      `Found ${results.length} results across ${uniqueLibraries.size} libraries\n`
     );
   } else {
     if (results.length === 0) {
@@ -134,9 +132,7 @@ export async function search(query: string, options: SearchOptions = {}): Promis
             `    ${pc.dim(r.library)} · ${pc.underline(r.section.url)}`
         );
       }
-      console.log(
-        `\n${results.length} of ${results.length} results. Use --limit for more.`,
-      );
+      console.log(`\n${results.length} of ${results.length} results. Use --limit for more.`);
     }
   }
 

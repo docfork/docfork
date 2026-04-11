@@ -79,14 +79,14 @@ export async function saveProjectConfig(projectRoot: string, config: ProjectConf
     }
   } catch (error) {
     throw new Error(
-      `Failed to write ${CONFIG_DIR}/${CONFIG_FILE}: ${error instanceof Error ? error.message : String(error)}`,
+      `Failed to write ${CONFIG_DIR}/${CONFIG_FILE}: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 }
 
 export async function addLibraryToProject(
   projectRoot: string,
-  library: string | { identifier: string; package?: string },
+  library: string | { identifier: string; package?: string }
 ): Promise<boolean> {
   const config = (await loadProjectConfig(projectRoot)) ?? {};
   const libraries = config.libraries ?? [];
@@ -109,9 +109,7 @@ export async function addLibraryToProject(
     packages: pkg ? [pkg] : [],
   };
 
-  const updated = [...libraries, entry].sort((a, b) =>
-    a.identifier.localeCompare(b.identifier),
-  );
+  const updated = [...libraries, entry].sort((a, b) => a.identifier.localeCompare(b.identifier));
   await saveProjectConfig(projectRoot, { ...config, libraries: updated });
   return true;
 }

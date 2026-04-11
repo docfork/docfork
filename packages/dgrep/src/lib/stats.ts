@@ -27,10 +27,7 @@ async function saveStats(projectRoot: string, stats: StatsFile): Promise<void> {
   await writeFile(join(dir, STATS_FILE), JSON.stringify(stats, null, 2) + "\n");
 }
 
-export async function incrementSearches(
-  projectRoot: string,
-  libraries: string[],
-): Promise<void> {
+export async function incrementSearches(projectRoot: string, libraries: string[]): Promise<void> {
   try {
     const stats = await loadStats(projectRoot);
     const now = new Date().toISOString().slice(0, 10);
@@ -46,10 +43,7 @@ export async function incrementSearches(
   }
 }
 
-export async function incrementReads(
-  projectRoot: string,
-  library: string,
-): Promise<void> {
+export async function incrementReads(projectRoot: string, library: string): Promise<void> {
   try {
     const stats = await loadStats(projectRoot);
     const entry = stats[library] ?? { searches: 0, reads: 0 };

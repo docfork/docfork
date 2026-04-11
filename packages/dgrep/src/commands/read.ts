@@ -19,7 +19,9 @@ export async function read(rawUrl: string, options: ReadOptions = {}): Promise<v
   try {
     new URL(url);
   } catch {
-    p.log.error(`Invalid URL: ${rawUrl}\n  Expected a documentation URL, e.g.:\n  dgrep read https://react.dev/reference/react/useState`);
+    p.log.error(
+      `Invalid URL: ${rawUrl}\n  Expected a documentation URL, e.g.:\n  dgrep read https://react.dev/reference/react/useState`
+    );
     process.exitCode = 1;
     return;
   }
@@ -56,8 +58,7 @@ export async function read(rawUrl: string, options: ReadOptions = {}): Promise<v
   } else {
     console.log(result.text);
     p.log.info(
-      `${result.library_identifier}` +
-        (result.version_info ? ` (${result.version_info})` : ""),
+      `${result.library_identifier}` + (result.version_info ? ` (${result.version_info})` : "")
     );
   }
 

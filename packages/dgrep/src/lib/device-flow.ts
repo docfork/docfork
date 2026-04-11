@@ -49,7 +49,9 @@ export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
       const json = JSON.parse(text);
       const msg = json?.error_description ?? json?.message;
       if (typeof msg === "string") message = msg;
-    } catch { /* not JSON */ }
+    } catch {
+      /* not JSON */
+    }
     throw new AuthError(message);
   }
 

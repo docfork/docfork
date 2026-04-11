@@ -20,7 +20,9 @@ async function main() {
         // already initialized — show compact status
         const pc = (await import("picocolors")).default;
         console.log("");
-        console.log(`  ${pc.bold("dgrep")} ${pc.dim("v0.1.0")} — ${config.libraries.length} libraries tracked`);
+        console.log(
+          `  ${pc.bold("dgrep")} ${pc.dim("v0.1.0")} — ${config.libraries.length} libraries tracked`
+        );
         console.log("");
         console.log(`  ${pc.dim("dgrep search <query>")}    Search documentation`);
         console.log(`  ${pc.dim("dgrep read <url>")}        Read content`);

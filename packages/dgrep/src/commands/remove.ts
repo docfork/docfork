@@ -20,9 +20,7 @@ export async function remove(library: string, options: RemoveOptions = {}): Prom
   const config = await loadProjectConfig(projectRoot);
   const libs = config?.libraries ?? [];
 
-  const match = libs.find(
-    (l) => l.identifier === library || l.packages.includes(library),
-  );
+  const match = libs.find((l) => l.identifier === library || l.packages.includes(library));
   if (!match) {
     p.log.info(`${accent().fg(library)} is not tracked. Nothing to remove.`);
     return;

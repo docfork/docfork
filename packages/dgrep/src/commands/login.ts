@@ -63,8 +63,7 @@ export async function login(): Promise<void> {
     result = await exchangeKey(token.access_token, config.apiKey);
   } catch (err) {
     // 409 = key already claimed — retry without unclaimed key for fresh key + profile
-    const is409 =
-      err instanceof Error && err.message.includes("already claimed") && config.apiKey;
+    const is409 = err instanceof Error && err.message.includes("already claimed") && config.apiKey;
 
     if (is409) {
       try {
