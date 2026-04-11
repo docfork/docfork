@@ -1,5 +1,6 @@
-# This workflow publishes the package to npm and creates Gemini CLI extension archives
-# when a GitHub release is published
+# This workflow publishes packages to npm when a GitHub release is published.
+# release-please creates GitHub Releases automatically from conventional commits.
+# Tag patterns: docfork-vX.Y.Z (MCP server), dgrep-vX.Y.Z (CLI)
 
 name: Release
 
@@ -8,39 +9,14 @@ on:
     types: [published]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 20
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm build
-
-      - name: Test
-        run: pnpm test
-
-  publish:
-    needs: build
+  # -- MCP server (docfork) --------------------------------
+  publish_mcp:
+    if: startsWith(github.event.release.tag_name, 'docfork-v')
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Required for OIDC trusted publishing
       contents: write
     env:
-      # Enforce trusted publishing path and avoid token-based fallback.
       NODE_AUTH_TOKEN: ""
     steps:
       - name: Checkout Repo
@@ -49,11 +25,11 @@ jobs:
       - name: Set version from tag
         run: |
           VERSION="${GITHUB_REF#refs/*/}"
-          VERSION="${VERSION#v}"
+          VERSION="${VERSION#docfork-v}"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -71,24 +47,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Set package version
+      - name: Stamp version in server.json
         run: |
           cd packages/mcp
-          echo $(jq --arg v "${{ env.VERSION }}" '(.version) = $v' package.json) > package.json
           echo $(jq --arg v "${{ env.VERSION }}" '.version = $v | .packages[0].version = $v' server.json) > server.json
 
-      - name: Update version in source file
-        run: |
-          cd packages/mcp
-          sed -i "s/version: \"[0-9]*\.[0-9]*\.[0-9]*\"/version: \"${{ env.VERSION }}\"/" src/index.ts
-
-      - name: Build
-        run: pnpm build
-
-      - name: Update gemini-extension.json version
+      - name: Stamp version in gemini-extension.json
         run: |
           cd packages/mcp
           echo $(jq --arg v "${{ env.VERSION }}" '.version = $v' gemini-extension.json) > gemini-extension.json
+
+      - name: Build
+        run: pnpm build
 
       - name: Create extension archive
         run: |
@@ -118,71 +88,12 @@ jobs:
           cd packages/mcp
           NODE_AUTH_TOKEN='' npm publish --access public --tag=beta
 
-  # TODO: Add tag-based filtering (dgrep-v* vs v* for MCP) before first dgrep npm publish.
-  # For now this job is disabled — enable when dgrep is ready for npm.
-  publish_dgrep:
-    if: false
-    needs: build
+  # -- MCP Registry ----------------------------------------
+  publish_registry:
+    needs: publish_mcp
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: read
-    env:
-      NODE_AUTH_TOKEN: ""
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v6
-
-      - name: Set version from tag
-        run: |
-          VERSION="${GITHUB_REF#refs/*/}"
-          VERSION="${VERSION#dgrep-v}"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: "22"
-          registry-url: https://registry.npmjs.org/
-          cache: "pnpm"
-          token: ""
-
-      - name: Ensure npm supports trusted publishing
-        run: |
-          npm i -g npm@^11.5.1
-          npm -v
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Set package version
-        run: |
-          cd packages/dgrep
-          echo $(jq --arg v "${{ env.VERSION }}" '(.version) = $v' package.json) > package.json
-
-      - name: Build
-        run: pnpm build
-
-      - name: Publish to npm (stable)
-        if: ${{ !github.event.release.prerelease }}
-        run: |
-          cd packages/dgrep
-          NODE_AUTH_TOKEN='' npm publish --access public
-
-      - name: Publish to npm (pre-release)
-        if: ${{ github.event.release.prerelease }}
-        run: |
-          cd packages/dgrep
-          NODE_AUTH_TOKEN='' npm publish --access public --tag=beta
-
-  publish_registry:
-    needs: publish
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write # required for oidc authentication with MCP registry
       contents: read
     steps:
       - name: Checkout
@@ -191,7 +102,7 @@ jobs:
       - name: Set version from tag
         run: |
           VERSION="${GITHUB_REF#refs/*/}"
-          VERSION="${VERSION#v}"
+          VERSION="${VERSION#docfork-v}"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Setup Node
@@ -220,3 +131,56 @@ jobs:
         run: |
           cd packages/mcp
           ../../mcp-publisher publish
+
+  # -- dgrep CLI -------------------------------------------
+  publish_dgrep:
+    if: startsWith(github.event.release.tag_name, 'dgrep-v')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      NODE_AUTH_TOKEN: ""
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v6
+
+      - name: Set version from tag
+        run: |
+          VERSION="${GITHUB_REF#refs/*/}"
+          VERSION="${VERSION#dgrep-v}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org/
+          cache: "pnpm"
+          token: ""
+
+      - name: Ensure npm supports trusted publishing
+        run: |
+          npm i -g npm@^11.5.1
+          npm -v
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Publish to npm (stable)
+        if: ${{ !github.event.release.prerelease }}
+        run: |
+          cd packages/dgrep
+          NODE_AUTH_TOKEN='' npm publish --access public
+
+      - name: Publish to npm (pre-release)
+        if: ${{ github.event.release.prerelease }}
+        run: |
+          cd packages/dgrep
+          NODE_AUTH_TOKEN='' npm publish --access public --tag=beta
