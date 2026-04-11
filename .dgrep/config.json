@@ -1,0 +1,74 @@
+{
+  "libraries": [
+    {
+      "identifier": "bombshell-dev/clack",
+      "packages": [
+        "@clack/prompts"
+      ]
+    },
+    {
+      "identifier": "colinhacks/zod",
+      "packages": [
+        "zod"
+      ]
+    },
+    {
+      "identifier": "facebook/react",
+      "packages": [
+        "react",
+        "react-dom"
+      ]
+    },
+    {
+      "identifier": "fuma-nama/fumadocs",
+      "packages": [
+        "fumadocs-core",
+        "fumadocs-mdx",
+        "fumadocs-ui"
+      ]
+    },
+    {
+      "identifier": "lucide-icons/lucide",
+      "packages": [
+        "lucide-react"
+      ]
+    },
+    {
+      "identifier": "modelcontextprotocol/typescript-sdk",
+      "packages": [
+        "@modelcontextprotocol/sdk"
+      ]
+    },
+    {
+      "identifier": "motdotla/dotenv",
+      "packages": [
+        "dotenv"
+      ]
+    },
+    {
+      "identifier": "panva/jose",
+      "packages": [
+        "jose"
+      ]
+    },
+    {
+      "identifier": "postcss/postcss",
+      "packages": [
+        "postcss"
+      ]
+    },
+    {
+      "identifier": "tailwindlabs/tailwindcss",
+      "packages": [
+        "@tailwindcss/postcss",
+        "tailwindcss"
+      ]
+    },
+    {
+      "identifier": "vercel/next.js",
+      "packages": [
+        "next"
+      ]
+    }
+  ]
+}

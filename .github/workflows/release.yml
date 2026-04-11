@@ -118,6 +118,66 @@ jobs:
           cd packages/mcp
           NODE_AUTH_TOKEN='' npm publish --access public --tag=beta
 
+  # TODO: Add tag-based filtering (dgrep-v* vs v* for MCP) before first dgrep npm publish.
+  # For now this job is disabled — enable when dgrep is ready for npm.
+  publish_dgrep:
+    if: false
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      NODE_AUTH_TOKEN: ""
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v6
+
+      - name: Set version from tag
+        run: |
+          VERSION="${GITHUB_REF#refs/*/}"
+          VERSION="${VERSION#dgrep-v}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org/
+          cache: "pnpm"
+          token: ""
+
+      - name: Ensure npm supports trusted publishing
+        run: |
+          npm i -g npm@^11.5.1
+          npm -v
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set package version
+        run: |
+          cd packages/dgrep
+          echo $(jq --arg v "${{ env.VERSION }}" '(.version) = $v' package.json) > package.json
+
+      - name: Build
+        run: pnpm build
+
+      - name: Publish to npm (stable)
+        if: ${{ !github.event.release.prerelease }}
+        run: |
+          cd packages/dgrep
+          NODE_AUTH_TOKEN='' npm publish --access public
+
+      - name: Publish to npm (pre-release)
+        if: ${{ github.event.release.prerelease }}
+        run: |
+          cd packages/dgrep
+          NODE_AUTH_TOKEN='' npm publish --access public --tag=beta
+
   publish_registry:
     needs: publish
     runs-on: ubuntu-latest

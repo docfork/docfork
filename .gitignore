@@ -5,7 +5,11 @@ node_modules/
 key.pem
 .cursor/
 .docfork/
-.claude/
+.dgrep/.cache/
+.claude/settings.local.json
+.claude/plans/
+.claude/worktrees/
+.claude/bridge/
 .env*
 
 # turborepo
@@ -13,3 +17,6 @@ key.pem
 
 # pnpm
 .pnpm-store/
+
+# npm link
+packages/dgrep/bin/
