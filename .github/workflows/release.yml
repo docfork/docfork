@@ -22,12 +22,6 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v6
 
-      - name: Set version from tag
-        run: |
-          VERSION="${GITHUB_REF#refs/*/}"
-          VERSION="${VERSION#docfork-v}"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v5
 
@@ -46,16 +40,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Stamp version in server.json
-        run: |
-          cd packages/mcp
-          echo $(jq --arg v "${{ env.VERSION }}" '.version = $v | .packages[0].version = $v' server.json) > server.json
-
-      - name: Stamp version in gemini-extension.json
-        run: |
-          cd packages/mcp
-          echo $(jq --arg v "${{ env.VERSION }}" '.version = $v' gemini-extension.json) > gemini-extension.json
 
       - name: Build
         run: pnpm build
@@ -99,21 +83,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set version from tag
-        run: |
-          VERSION="${GITHUB_REF#refs/*/}"
-          VERSION="${VERSION#docfork-v}"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: "22"
-
-      - name: Update server.json version
-        run: |
-          cd packages/mcp
-          echo $(jq --arg v "${{ env.VERSION }}" '.version = $v | .packages[0].version = $v' server.json) > server.json
 
       - name: Validate server.json
         run: |

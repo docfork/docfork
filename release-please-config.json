@@ -6,7 +6,24 @@
   "separate-pull-requests": true,
   "packages": {
     "packages/mcp": {
-      "changelog-path": "CHANGELOG.md"
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "server.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "server.json",
+          "jsonpath": "$.packages[0].version"
+        },
+        {
+          "type": "json",
+          "path": "gemini-extension.json",
+          "jsonpath": "$.version"
+        }
+      ]
     },
     "packages/dgrep": {
       "changelog-path": "CHANGELOG.md",
