@@ -20,8 +20,11 @@ beforeEach(async () => {
   server.use(
     http.post(`${API_URL}/keys/provision`, () => {
       return HttpResponse.json({
-        apiKey: "docf_test_wizard_key",
-        expiresAt: "2026-04-03T00:00:00Z",
+        api_key: "docf_test_wizard_key",
+        key_prefix: "docf_test_wizar",
+        organization_id: "org-test",
+        expires_at: "2026-04-03T00:00:00Z",
+        claim_url: "https://app.docfork.com/claim?token=test",
       });
     }),
   );
