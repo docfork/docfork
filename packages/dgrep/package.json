@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@clack/prompts": "^0.9",
-    "@types/node": "25.2.3",
+    "@types/node": "catalog:",
     "@types/yargs": "^17.0.35",
     "msw": "^2.12.14",
     "obuild": "latest",
