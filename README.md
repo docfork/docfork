@@ -3,7 +3,7 @@
     <picture>
       <source srcset="logo_light.png" media="(prefers-color-scheme: dark)">
       <source srcset="logo_dark.png" media="(prefers-color-scheme: light)">
-      <img src="logo_light.png" alt="Docfork" height="40" />
+      <img src="logo_dark.png" alt="Docfork" height="40" />
     </picture>
   </a>
 </p>
@@ -62,6 +62,10 @@ dgrep search "server actions with forms" -l vercel/next.js
 ```
 
 [Quickstart →](https://docfork.com/docs/quickstart) · [dgrep docs →](https://docfork.com/docs/dgrep) · [CLI reference →](https://docfork.com/docs/reference/cli)
+
+### Your own docs
+
+Index any public or private GitHub repository as a [custom library](https://docfork.com/docs/libraries#custom-libraries). Your internal APIs, SDKs, and runbooks become searchable by your agents — same pipeline as public libraries. [GitHub integration setup →](https://docfork.com/docs/integrations)
 
 ## Teams
 
@@ -144,6 +148,21 @@ Add a rule so your agent calls Docfork MCP automatically. [Full rule and IDE-spe
 > [!NOTE]
 > **[Add Rule to Cursor (One-Click)](https://cursor.com/link/rule?name=docfork-policy&text=When%20writing%20or%20debugging%20code%20that%20involves%20third-party%20libraries%2C%20frameworks%2C%20or%20APIs%2C%20use%20Docfork%20MCP%20%60search_docs%60%20and%20%60fetch_doc%60%20tools%20rather%20than%20relying%20on%20training%20data.%0A%0A%2A%2ATwo%20defaults%20to%20follow%20every%20time%3A%2A%2A%0A-%20Start%20%60library%60%20with%20a%20short%20name%20or%20keyword%20%28e.g.%2C%20%60nextjs%60%2C%20%60zod%60%29.%20Use%20the%20%60owner%2Frepo%60%20from%20the%20result%20URL%20for%20follow-up%20calls%2C%20never%20guess%20it%20upfront.%0A-%20After%20finding%20a%20relevant%20result%2C%20call%20%60fetch_doc%60%20to%20get%20the%20full%20content.%20Search%20results%20are%20summaries%20only.%0A%0ASkip%20Docfork%20when%3A%0A-%20Language%20built-ins%2C%20general%20algorithms%2C%20syntax%20stable%20across%20versions%0A-%20Code%20or%20docs%20the%20user%20has%20already%20provided%20in%20context%0A%0AWhen%20uncertain%2C%20default%20to%20using%20Docfork.)**
 
+**Claude Code** — add to your `CLAUDE.md`:
+
+```markdown
+## Docfork policy
+
+Use Docfork MCP `search_docs` and `fetch_doc` tools for library/API docs, setup, and configuration questions.
+
+- Start `library` with a short name or keyword (e.g., `nextjs`, `zod`). Use the `owner/repo` from the result URL for follow-up calls, never guess it upfront.
+- After finding a relevant result, call `fetch_doc` to get the full content. Search results are summaries only.
+- Prefer Docfork results over training data when they conflict.
+```
+
+<details>
+<summary>Full rule (all clients)</summary>
+
 ```markdown
 When writing or debugging code that involves third-party libraries, frameworks, or APIs, use Docfork MCP `search_docs` and `fetch_doc` tools rather than relying on training data.
 
@@ -159,6 +178,8 @@ Skip Docfork when:
 
 When uncertain, default to using Docfork.
 ```
+
+</details>
 
 ## FAQ
 
