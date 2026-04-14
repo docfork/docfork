@@ -16,8 +16,6 @@ jobs:
     permissions:
       id-token: write # Required for OIDC trusted publishing
       contents: write
-    env:
-      NODE_AUTH_TOKEN: ""
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v6
@@ -31,7 +29,6 @@ jobs:
           node-version: "22"
           registry-url: https://registry.npmjs.org/
           cache: "pnpm"
-          token: ""
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -59,13 +56,13 @@ jobs:
         if: ${{ !github.event.release.prerelease }}
         run: |
           cd packages/mcp
-          NODE_AUTH_TOKEN='' npm publish --access public
+          npm publish --access public --provenance
 
       - name: Publish to npm (pre-release)
         if: ${{ github.event.release.prerelease }}
         run: |
           cd packages/mcp
-          NODE_AUTH_TOKEN='' npm publish --access public --tag=beta
+          npm publish --access public --provenance --tag=beta
 
   # -- MCP Registry ----------------------------------------
   publish_registry:
@@ -107,8 +104,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    env:
-      NODE_AUTH_TOKEN: ""
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v6
@@ -128,7 +123,6 @@ jobs:
           node-version: "22"
           registry-url: https://registry.npmjs.org/
           cache: "pnpm"
-          token: ""
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -140,10 +134,10 @@ jobs:
         if: ${{ !github.event.release.prerelease }}
         run: |
           cd packages/dgrep
-          NODE_AUTH_TOKEN='' npm publish --access public
+          npm publish --access public --provenance
 
       - name: Publish to npm (pre-release)
         if: ${{ github.event.release.prerelease }}
         run: |
           cd packages/dgrep
-          NODE_AUTH_TOKEN='' npm publish --access public --tag=beta
+          npm publish --access public --provenance --tag=beta
