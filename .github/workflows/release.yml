@@ -33,11 +33,6 @@ jobs:
           cache: "pnpm"
           token: ""
 
-      - name: Ensure npm supports trusted publishing
-        run: |
-          npm i -g npm@^11.5.1
-          npm -v
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -134,11 +129,6 @@ jobs:
           registry-url: https://registry.npmjs.org/
           cache: "pnpm"
           token: ""
-
-      - name: Ensure npm supports trusted publishing
-        run: |
-          npm i -g npm@^11.5.1
-          npm -v
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
