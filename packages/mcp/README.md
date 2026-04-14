@@ -1,35 +1,43 @@
 [![Docfork cover](https://docfork.com/cover.png)](https://docfork.com)
 
-# Docfork MCP - Up-to-date Docs for AI Agents
+# Docfork MCP — Documentation for AI Coding Agents
 
 <a href="https://cursor.com/en/install-mcp?name=docfork&config=eyJ1cmwiOiJodHRwczovL21jcC5kb2Nmb3JrLmNvbS9tY3AifQ%3D%3D"><img src="https://cursor.com/deeplink/mcp-install-dark.svg" height="32" alt="Add to Cursor"/></a>&nbsp;&nbsp;<a href="https://insiders.vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%7B%22name%22%3A%22docfork%22%2C%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22docfork%40latest%22%5D%7D"><img src="https://img.shields.io/badge/Add%20to%20VS%20Code-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white" height="32" alt="Add to VS Code"/></a>&nbsp;&nbsp;<a href="https://app.docfork.com/signup"><img src="https://img.shields.io/badge/Get%20Free%20API%20Key-F02A2B?style=for-the-badge&logo=fire&logoColor=white" height="32" alt="Get Free API Key"/></a>
 
 <a href="https://docfork.com"><img alt="Website" src="https://img.shields.io/badge/Website-docfork.com-blue?style=flat-square" /></a>&nbsp;&nbsp;<a href="https://www.npmjs.com/package/docfork"><img alt="npm" src="https://img.shields.io/npm/v/docfork?style=flat-square&color=red" /></a>&nbsp;&nbsp;<a href="https://www.npmjs.com/package/docfork"><img alt="npm downloads" src="https://img.shields.io/npm/dm/docfork?style=flat-square" /></a>&nbsp;&nbsp;<a href="./LICENSE"><img alt="License" src="https://img.shields.io/npm/l/docfork?style=flat-square" /></a>
 
-**Lock your agent's context to your stack.**
+AI agents write code from stale training data. Docfork serves current, version-pinned documentation before they generate.
 
-Define a **Docfork Cabinet** — `Next.js 16` + `Drizzle ORM` + `Better Auth` — and every query returns only docs from your stack. No more bloated results. No more hallucinations.
+**Lock your agent's context to your stack.** Define a **Docfork Cabinet** (`vercel/next.js` + `drizzle-team/drizzle-orm` + `honojs/hono`) and every query returns only docs from your stack.
 
-## ⚡ Built for Precision
+## Built for Precision
 
 Documentation context as precise as your dependency lockfile:
 
 - **Cabinets** — Lock your agent to a verified stack. Only your libraries. Fully isolated.
 
-- **10,000+ libraries** — Pre-chunked docs and code examples. ~200ms edge retrieval.
+- **Curated catalog of popular frameworks and libraries** — Pre-chunked docs and code examples. ~200ms edge retrieval.
 
 - **Team-ready** — Share Cabinets and API keys across your org. Same context, every engineer.
 
-> **Set a Cabinet:** `Next.js 16` + `Drizzle ORM` + `Better Auth`.
-> Your agent only sees docs for your stack. No stray Express docs. No Prisma confusion.
+> **Set a Cabinet:** `vercel/next.js` + `drizzle-team/drizzle-orm` + `honojs/hono`.
+> Your agent only sees docs for your stack.
 
-## 🚀 Quick Start
+## Quick Start
 
-### 1. Get your Free API Key
+### Recommended: use dgrep
 
-Sign up at **[docfork.com](https://app.docfork.com/signup)** — free: 1,000 requests/month, 5 team seats.
+```bash
+npx dgrep setup --cursor
+```
 
-### 2. Install MCP
+Installs the Docfork MCP server in your IDE. Detects your dependencies, provisions an API key, and writes the config file. Also supports `--claude` and `--opencode`.
+
+[dgrep docs →](https://docfork.com/docs/dgrep)
+
+### Manual setup
+
+If you prefer to configure MCP manually, get a free API key at **[docfork.com](https://app.docfork.com/signup)** (1,000 requests/month, 5 team seats) and follow the instructions for your client below.
 
 <details>
 <summary><b>Install in Claude Code</b></summary>
@@ -713,7 +721,7 @@ docker build -t docfork .
 <details>
 <summary><b>Install Using the Desktop Extension</b></summary>
 
-Install the [docfork.mcpb](https://github.com/docfork/docfork/tree/master/mcpb/docfork.mcpb) file and add it to your client. See [MCP bundles docs](https://github.com/anthropics/mcpb#mcp-bundles-mcpb) for more info.
+Install the [docfork.mcpb](https://github.com/docfork/docfork/tree/main/mcpb/docfork.mcpb) file and add it to your client. See [MCP bundles docs](https://github.com/anthropics/mcpb#mcp-bundles-mcpb) for more info.
 
 </details>
 
@@ -1111,7 +1119,7 @@ See the [Emdash repository](https://github.com/generalaction/emdash) for more in
 
 </details>
 
-**[More installation guides →](https://docs.docfork.com/clients/overview)**
+**[More installation guides →](https://docfork.com/docs/mcp/setup)**
 
 <details>
 <summary><b>OAuth Authentication</b></summary>
@@ -1123,16 +1131,16 @@ Docfork supports [MCP OAuth specs](https://modelcontextprotocol.io/specification
 + "url": "https://mcp.docfork.com/mcp/oauth"
 ```
 
-_Note: OAuth is for remote HTTP connections only. [View OAuth Guide →](https://docs.docfork.com/core/authentication)_
+_Note: OAuth is for remote HTTP connections only. [View OAuth Guide →](https://docfork.com/docs/authentication#oauth-20)_
 
 </details>
 
-### 3. Just say `use docfork`
+### 3. Start using it
 
-Add `use docfork` to any prompt:
+After setup, your agent has two tools: `search_docs` and `fetch_doc`. No prompt suffix needed:
 
 ```txt
-Implement a secure authentication flow using Better Auth and Supabase. use docfork
+Set up server-side rendering with Next.js App Router.
 ```
 
 ### 4. Make it automatic
@@ -1163,10 +1171,10 @@ When uncertain, default to using Docfork.
 Now your AI fetches the latest docs automatically:
 
 ```txt
-Add a Prisma schema for a multi-tenant SaaS and generate the client.
+Add middleware to redirect unauthenticated users in Next.js.
 ```
 
-## 🔨 Tools
+## Tools
 
 ### `search_docs`
 
@@ -1186,27 +1194,33 @@ Fetch full Markdown content from a documentation URL when search chunks aren't e
 | --------- | -------- | ----------------------------------------------------------------- |
 | `url`     | Yes      | URL from `search_docs` results. Anchors and deep paths supported. |
 
-## 📖 Docs
+## Teams
+
+Free: 1,000 requests/month. Share API keys and Cabinets across your organization. [Security →](https://docfork.com/security) · [Pricing →](https://docfork.com/pricing)
+
+## Docs
 
 - **[Search Public Libraries](https://docfork.com/search)** – Find libraries to add to your Cabinet.
-- **[Installation Guides](https://docs.docfork.com/get-started/installation)** – Setup guides for every IDE.
-- **[Cabinets](https://docs.docfork.com/core/cabinets)** – Lock your agent to specific libraries.
-- **[Library Identifiers](https://docs.docfork.com/context/identifiers)** – Target exact repos with `owner/repo`.
-- **[Troubleshooting](https://docs.docfork.com/troubleshooting/common-fixes)** – Fix connection or auth issues.
+- **[Setup Guide](https://docfork.com/docs/mcp/setup)** – Installation for every IDE.
+- **[Cabinets](https://docfork.com/docs/cabinets)** – Lock your agent to specific libraries.
+- **[Libraries](https://docfork.com/docs/libraries)** – Browse and add libraries.
+- **[Troubleshooting](https://docfork.com/docs/troubleshooting)** – Fix connection or auth issues.
 
-## 💬 Community
+Docfork is retrieval, not synthesis — agents compose the answers.
+
+## Community
 
 - **[Changelog](https://docfork.com/changelog)** – We ship constantly. Every release, documented.
 - **[X (Twitter)](https://x.com/docfork_ai)** – Product updates and what's next.
-- Found an issue? [Raise a GitHub issue](https://github.com/docfork/mcp/issues/new?labels=library&title=LIBRARY:%20) or [contact support](mailto:support@docfork.com).
+- Found an issue? [Raise a GitHub issue](https://github.com/docfork/docfork/issues/new?labels=library&title=LIBRARY:%20) or [contact support](mailto:support@docfork.com).
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=docfork/mcp&type=Date)](https://www.star-history.com/#docfork/mcp&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=docfork/docfork&type=Date)](https://www.star-history.com/#docfork/docfork&Date)
 
 ## Disclaimer
 
-Docfork is an open, community-driven catalogue. We review submissions but can't guarantee accuracy for every project. Spot an issue? [Raise a GitHub issue](https://github.com/docfork/mcp/issues/new?labels=library&title=LIBRARY:%20) or [contact support](mailto:support@docfork.com).
+Docfork is an open, community-driven catalog. We review submissions but can't guarantee accuracy for every project. Spot an issue? [Raise a GitHub issue](https://github.com/docfork/docfork/issues/new?labels=library&title=LIBRARY:%20) or [contact support](mailto:support@docfork.com).
 
 ## License
 

@@ -164,9 +164,8 @@ export async function init(options: InitOptions = {}): Promise<void> {
     }
 
     if (result.unresolved.length > 0) {
-      for (const u of result.unresolved) {
-        p.log.message(`  ${pc.yellow("✗")} ${u} — ${pc.dim("not in catalog")}`);
-      }
+      const list = result.unresolved.join(", ");
+      p.log.message(`  ${pc.yellow("✗")} ${pc.dim("not in catalog:")} ${list}`);
     }
   } catch {
     // resolve failed (no auth, network, etc.) — save raw npm names as fallback
