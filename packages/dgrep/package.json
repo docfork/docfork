@@ -37,5 +37,10 @@
     "vitest": "^3",
     "yargs": "^18"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/docfork/docfork",
+    "directory": "packages/dgrep"
+  },
   "homepage": "https://github.com/docfork/docfork#readme"
 }
