@@ -17,9 +17,7 @@
   <img src="demo.gif" alt="Docfork demo" />
 </p>
 
-AI agents hallucinate APIs. They write code from frozen training snapshots: the method was renamed, the config shape changed, you asked for Hono and got Express.
-
-Docfork indexes documentation and serves it to agents before they generate code.
+AI agents hallucinate APIs, bloat context with stale docs, and write code against outdated signatures. Docfork serves up-to-date documentation directly in Cursor, Claude Code, and Windsurf.
 
 ### Without Docfork
 
@@ -45,10 +43,10 @@ Installs the Docfork MCP server in your IDE. Detects your dependencies, provisio
 
 Your agent now has two tools:
 
-| Tool | Returns |
-| --- | --- |
+| Tool          | Returns                                                                |
+| ------------- | ---------------------------------------------------------------------- |
 | `search_docs` | Ranked documentation sections with titles, URLs, and relevance scores. |
-| `fetch_doc` | Full rendered markdown content from a documentation URL. |
+| `fetch_doc`   | Full rendered markdown content from a documentation URL.               |
 
 No prompt suffix needed:
 
@@ -87,7 +85,8 @@ Share API keys and [Cabinets](https://docfork.com/docs/cabinets) across your org
 
 ## MCP Setup
 
-> **Recommended:** Run `npx dgrep setup --cursor` (or `--claude`, `--opencode`) to install automatically. Manual config below for other clients.
+> [!TIP]
+> Run `npx dgrep setup --cursor` (or `--claude`, `--opencode`) to install automatically. Manual config below for other clients.
 
 **Cursor** — <a href="https://cursor.com/en/install-mcp?name=docfork&config=eyJ1cmwiOiJodHRwczovL21jcC5kb2Nmb3JrLmNvbS9tY3AifQ%3D%3D"><img src="https://cursor.com/deeplink/mcp-install-dark.svg" height="20" alt="Add to Cursor"/></a>
 
@@ -107,7 +106,7 @@ Share API keys and [Cabinets](https://docfork.com/docs/cabinets) across your org
 **Claude Code**
 
 ```bash
-claude mcp add --transport http docfork https://mcp.docfork.com/mcp --header "DOCFORK_API_KEY: YOUR_API_KEY"
+claude mcp add --transport http docfork https://mcp.docfork.com/mcp/oauth
 ```
 
 **OpenCode**
@@ -119,17 +118,47 @@ claude mcp add --transport http docfork https://mcp.docfork.com/mcp --header "DO
       "type": "remote",
       "url": "https://mcp.docfork.com/mcp",
       "headers": { "DOCFORK_API_KEY": "YOUR_API_KEY" },
-      "enabled": true
-    }
-  }
+      "enabled": true,
+    },
+  },
 }
 ```
 
-**[All 29 clients →](https://docfork.com/docs/mcp/setup)** · [OAuth →](https://docfork.com/docs/authentication#oauth-20)
+Don't see your client? [Setup guides for all 29 supported clients →](https://docfork.com/docs/mcp/setup)
+
+**OAuth Authentication**
+
+Docfork supports [MCP OAuth specs](https://modelcontextprotocol.io/specification/latest/basic/authorization). Change your endpoint to use OAuth:
+
+```diff
+- "url": "https://mcp.docfork.com/mcp"
++ "url": "https://mcp.docfork.com/mcp/oauth"
+```
+
+_Note: OAuth is for remote HTTP connections only. [View full OAuth guide →](https://docfork.com/docs/authentication#oauth-20)_
 
 ## Agent Rule
 
-Add a rule so your agent calls Docfork automatically. [Full rule and IDE-specific setup →](https://docfork.com/docs/mcp/best-practices)
+Add a rule so your agent calls Docfork MCP automatically. [Full rule and IDE-specific setup →](https://docfork.com/docs/mcp/best-practices)
+
+> [!NOTE]
+> **[Add Rule to Cursor (One-Click)](https://cursor.com/link/rule?name=docfork-policy&text=When%20writing%20or%20debugging%20code%20that%20involves%20third-party%20libraries%2C%20frameworks%2C%20or%20APIs%2C%20use%20Docfork%20MCP%20%60search_docs%60%20and%20%60fetch_doc%60%20tools%20rather%20than%20relying%20on%20training%20data.%0A%0A%2A%2ATwo%20defaults%20to%20follow%20every%20time%3A%2A%2A%0A-%20Start%20%60library%60%20with%20a%20short%20name%20or%20keyword%20%28e.g.%2C%20%60nextjs%60%2C%20%60zod%60%29.%20Use%20the%20%60owner%2Frepo%60%20from%20the%20result%20URL%20for%20follow-up%20calls%2C%20never%20guess%20it%20upfront.%0A-%20After%20finding%20a%20relevant%20result%2C%20call%20%60fetch_doc%60%20to%20get%20the%20full%20content.%20Search%20results%20are%20summaries%20only.%0A%0ASkip%20Docfork%20when%3A%0A-%20Language%20built-ins%2C%20general%20algorithms%2C%20syntax%20stable%20across%20versions%0A-%20Code%20or%20docs%20the%20user%20has%20already%20provided%20in%20context%0A%0AWhen%20uncertain%2C%20default%20to%20using%20Docfork.)**
+
+```markdown
+When writing or debugging code that involves third-party libraries, frameworks, or APIs, use Docfork MCP `search_docs` and `fetch_doc` tools rather than relying on training data.
+
+**Two defaults to follow every time:**
+
+- Start `library` with a short name or keyword (e.g., `nextjs`, `zod`). Use the `owner/repo` from the result URL for follow-up calls, never guess it upfront.
+- After finding a relevant result, call `fetch_doc` to get the full content. Search results are summaries only.
+
+Skip Docfork when:
+
+- Language built-ins, general algorithms, syntax stable across versions
+- Code or docs the user has already provided in context
+
+When uncertain, default to using Docfork.
+```
 
 ## FAQ
 
