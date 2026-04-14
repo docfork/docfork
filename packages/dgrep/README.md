@@ -1,131 +1,131 @@
 # dgrep
 
-Documentation grounding for AI agents. Search versioned, indexed docs from the command line.
+The CLI for [Docfork](https://docfork.com), the documentation index for AI coding agents. Search versioned library docs from the terminal.
+
+dgrep demo
 
 ```bash
-npx dgrep search "hooks" -l react
+npx dgrep
 ```
 
 ## Install
 
 ```bash
-npx dgrep          # run directly (recommended)
-npm install -g dgrep   # or install globally
+npx dgrep            # run directly (recommended)
+npm install -g dgrep # or install globally
 ```
 
-## Quick Start
+## Quick start
 
 ```bash
-# Search a library
-dgrep search "server components" -l react
-
-# Initialize project tracking (reads package.json)
-dgrep init
-
-# After init, search without specifying libraries
-dgrep search "server components"
-
-# Add a library manually
-dgrep add drizzle
+dgrep init                                                              # detect deps, write config
+dgrep search "server-side rendering with App Router"                    # search tracked libraries
+dgrep search "middleware redirect based on authentication" -l vercel/next.js  # search a specific library
+dgrep read https://nextjs.org/docs/app/building-your-application/routing/middleware
+dgrep setup                                                             # wire into Cursor, Claude Code, OpenCode
 ```
+
+dgrep provisions keys automatically on first search. No API key required.
+
+## How it works
+
+`dgrep init` detects your dependencies and writes `.dgrep/config.json`. After that, `dgrep search` resolves libraries locally — no setup step on every query.
+
+[Architecture details →](https://docfork.com/docs/dgrep)
 
 ## Commands
 
-### `dgrep search <query>`
 
-Search documentation across your project's libraries.
+| Command                  | Description                                                      |
+| ------------------------ | ---------------------------------------------------------------- |
+| `dgrep`                  | Show status (runs init if not yet configured)                    |
+| `dgrep init`             | Detect dependencies, resolve libraries, write config             |
+| `dgrep search <query>`   | Search documentation across tracked libraries                    |
+| `dgrep read <url>`       | Fetch full content of a documentation page                       |
+| `dgrep add <library>`    | Add a library to your stack                                      |
+| `dgrep remove <library>` | Remove a library from tracking                                   |
+| `dgrep list`             | List tracked libraries                                           |
+| `dgrep setup`            | Install the Docfork MCP server in your IDE (Cursor, Claude Code, OpenCode) |
+| `dgrep status`           | Show configuration and authentication state                      |
+| `dgrep login`            | Log in to your Docfork account                                   |
+| `dgrep logout`           | Log out and clear credentials                                    |
+| `dgrep doctor`           | Diagnose setup and connectivity                                  |
+| `dgrep color [name]`     | Set CLI accent color                                             |
 
-```bash
-dgrep search "hooks"                        # auto-detect libraries
-dgrep search "hooks" -l react               # explicit library
-dgrep search "hooks" -l react -l nextjs     # multi-library (parallel)
-dgrep search "hooks" --json                 # NDJSON output for agents
-dgrep search "hooks" -l react --no-save     # don't remember library
-```
 
-Libraries are resolved in order:
-1. `--library` flag (explicit)
-2. `.dgrep/config.json` (project tracking)
-3. `package.json` dependencies (auto-detected)
-4. Docfork catalog (fallback)
+## Flags
 
-### `dgrep init`
+### Global
 
-Detect dependencies from `package.json` and create `.dgrep/config.json`.
 
-```bash
-dgrep init          # interactive selection
-dgrep init --yes    # accept all detected deps
-```
+| Flag         | Description                        |
+| ------------ | ---------------------------------- |
+| `-y, --yes`  | Skip interactive prompts (CI mode) |
+| `--json`     | Output as NDJSON                   |
+| `--api-key`  | Override API key                   |
+| `-h, --help` | Show help                          |
+| `--version`  | Show version                       |
 
-### `dgrep add <library>`
 
-Add a library to your project's tracked libraries.
+### Search
 
-```bash
-dgrep add react           # catalog library
-dgrep add vercel/next.js  # GitHub repo
-dgrep add react --yes     # skip confirmation
-```
 
-### `dgrep` (wizard)
+| Flag            | Description                                     |
+| --------------- | ----------------------------------------------- |
+| `-l, --library` | Library to search (repeatable)                  |
+| `--limit`       | Max results (default: 10)                       |
+| `--no-save`     | Don't remember this library for future searches |
 
-Interactive setup. Provisions an API key, detects your IDE, and writes MCP config.
 
-```bash
-dgrep          # interactive
-dgrep --yes    # non-interactive (CI/agent mode)
-```
+### Read
 
-### `dgrep claim`
+`dgrep read` accepts `--tokens <n>` to set the token budget (default: 20000).
 
-Link your provisioned API key to a Docfork account via browser login.
+### Setup (MCP install)
 
-```bash
-dgrep claim
-```
+
+| Flag         | Description                                   |
+| ------------ | --------------------------------------------- |
+| `--cursor`   | Install Docfork MCP in Cursor                 |
+| `--claude`   | Install Docfork MCP in Claude Code            |
+| `--opencode` | Install Docfork MCP in OpenCode               |
+| `--all`      | Install in all detected agents                |
+
 
 ## Configuration
 
 ### Project config: `.dgrep/config.json`
 
-Created by `dgrep init` or `dgrep add`. Committed to git.
+Created by `dgrep init` or `dgrep add`. Commit this to git so your team shares the same library set.
 
 ```json
 {
-  "libraries": ["react", "next.js", "typescript"]
+  "libraries": [
+    { "identifier": "honojs/hono", "packages": ["hono"] },
+    { "identifier": "facebook/react", "packages": ["react"] },
+    { "identifier": "vercel/next.js", "packages": ["next"] }
+  ]
 }
 ```
 
+Each entry maps a Docfork identifier to the npm packages that resolved to it.
+
 ### User config: `~/.dgrep/config.json`
 
-API key and preferences. Created by the wizard or `dgrep claim`.
+API key and preferences. Created automatically on first search or by `dgrep login`. Do not commit this.
 
-## Flags
+## Agent usage
 
-| Flag | Description |
-|------|-------------|
-| `-y, --yes` | Skip all interactive prompts |
-| `--json` | Output as NDJSON |
-| `--api-key` | Override API key |
-| `-l, --library` | Library to search (repeatable) |
-| `--no-save` | Don't remember library for future searches |
-| `--cabinet` | Org cabinet for private docs |
-
-## Agent Usage
-
-dgrep is designed for both humans and AI agents. Every input is a flag, every output is parseable.
+IDE agents call dgrep automatically after `dgrep setup`. For custom integrations, use `--json` for structured output:
 
 ```bash
-# Agent-friendly: explicit flags, NDJSON output, no prompts
-dgrep search "auth middleware" -l nextjs --json --yes
-
-# Pipe to other tools
-dgrep search "hooks" -l react --json | jq '.url'
+dgrep search "server actions with forms" -l vercel/next.js --json --yes
+dgrep read <url> --json
 ```
 
 ## Links
 
+- [dgrep docs](https://docfork.com/docs/dgrep)
+- [CLI reference](https://docfork.com/docs/reference/cli)
 - [Docfork](https://docfork.com)
-- [Documentation](https://docfork.com/docs)
-- [GitHub](https://github.com/docfork/docfork)
+
