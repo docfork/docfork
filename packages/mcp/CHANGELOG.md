@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0](https://github.com/docfork/docfork/compare/docfork-v2.2.0...docfork-v2.3.0) (2026-04-14)
+
+
+### Features
+
+* **docs:** update content and dependencies ([8e93e42](https://github.com/docfork/docfork/commit/8e93e42b8aaaaa593befceb636b8b7a9c9855e64))
+* **mcp:** update MCP tools to v5 (improved chaining and descriptions) ([9998829](https://github.com/docfork/docfork/commit/9998829497597dd4f3174117ec6ddae4c1692fc2))
+* **mcp:** v2.0.0 - Sharper tools, precise retrieval ([4a9e096](https://github.com/docfork/docfork/commit/4a9e0967f30bebea47f57081e23313d03636d06a))
+* update MCP tools to v5 (improved chaining and descriptions) ([1cf8760](https://github.com/docfork/docfork/commit/1cf87609f5db8a36255c28fa7268fd8379203052))
+
+
+### Bug Fixes
+
+* **ci:** add .prettierignore to packages for changelogs ([2d98f16](https://github.com/docfork/docfork/commit/2d98f16799364c743b6e53a87b5f80034a1a4454))
+* **ci:** add .prettierignore to packages for release-please changelogs ([ca24e45](https://github.com/docfork/docfork/commit/ca24e45cdd5280d2297c6a4c08e1c638b52e61e7))
+* **ci:** add gemini-extension.json to prettierignore ([7a1e8f5](https://github.com/docfork/docfork/commit/7a1e8f5777f0a85c6893949e0147db68d3a89b78))
+* **ci:** add gemini-extension.json to prettierignore ([17fdcc1](https://github.com/docfork/docfork/commit/17fdcc1316d053ba44409cafb737084d622f1be2))
+
 ## [2.2.0](https://github.com/docfork/docfork/compare/docfork-v2.1.0...docfork-v2.2.0) (2026-04-14)
 
 
