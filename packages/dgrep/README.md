@@ -2,7 +2,7 @@
 
 The CLI for [Docfork](https://docfork.com), the documentation index for AI coding agents. Search versioned library docs from the terminal.
 
-dgrep demo
+<img src="https://raw.githubusercontent.com/docfork/docfork/main/demo.gif" alt="dgrep demo" />
 
 ```bash
 npx dgrep
