@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/docfork/docfork/compare/dgrep-v0.1.1...dgrep-v0.1.2) (2026-04-15)
+
+
+### Bug Fixes
+
+* **dgrep:** use absolute URL for demo.gif in README ([#125](https://github.com/docfork/docfork/issues/125)) ([6cd36d6](https://github.com/docfork/docfork/commit/6cd36d60ec9356b37810361401fb60f87581497e))
+
 ## [0.1.1](https://github.com/docfork/docfork/compare/dgrep-v0.1.0...dgrep-v0.1.1) (2026-04-11)
 
 
