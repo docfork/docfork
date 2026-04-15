@@ -68,37 +68,41 @@ jobs:
           npx npm@latest publish --access public --provenance --tag=beta
 
   # -- MCP Registry ----------------------------------------
-  publish_registry:
-    needs: publish_mcp
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: "22"
-
-      - name: Validate server.json
-        run: |
-          cd packages/mcp
-          npx mcp-registry-validator validate server.json
-
-      - name: Install MCP Publisher
-        run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
-
-      - name: Login to MCP Registry
-        run: ./mcp-publisher login github-oidc
-
-      - name: Publish to registry
-        run: |
-          cd packages/mcp
-          ../../mcp-publisher publish
+  # Skipped: registry returns 400 "remote URL already used by server
+  # com.docfork/docfork-mcp". Re-enable once the duplicate is resolved
+  # with the MCP Registry team.
+  #
+  # publish_registry:
+  #   needs: publish_mcp
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     id-token: write
+  #     contents: read
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v6
+  #
+  #     - name: Setup Node
+  #       uses: actions/setup-node@v6
+  #       with:
+  #         node-version: "22"
+  #
+  #     - name: Validate server.json
+  #       run: |
+  #         cd packages/mcp
+  #         npx mcp-registry-validator validate server.json
+  #
+  #     - name: Install MCP Publisher
+  #       run: |
+  #         curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+  #
+  #     - name: Login to MCP Registry
+  #       run: ./mcp-publisher login github-oidc
+  #
+  #     - name: Publish to registry
+  #       run: |
+  #         cd packages/mcp
+  #         ../../mcp-publisher publish
 
   # -- dgrep CLI -------------------------------------------
   publish_dgrep:
