@@ -37,7 +37,7 @@ export function captureInstall(distinctId: string, props: InstallProps): Promise
 
 export function captureCommandExecuted(
   distinctId: string,
-  props: CommandExecutedProps,
+  props: CommandExecutedProps
 ): Promise<void> {
   return track("dgrep_command_executed", distinctId, props as unknown as Record<string, unknown>);
 }
