@@ -1,6 +1,5 @@
 const TELEMETRY_URL = "https://api.docfork.com/v1/telemetry";
 
-// Widely-set CI variables. Mirrors vercel-labs/add-skill.
 export function isCI(): boolean {
   return !!(
     process.env.CI ||
@@ -14,10 +13,10 @@ export function isCI(): boolean {
   );
 }
 
-// `DO_NOT_TRACK` is the consoledonottrack.com convention: any truthy value
-// opts the user out. `DGREP_TELEMETRY=0` is a dgrep-specific override so the
-// user can turn telemetry off without affecting other CLIs that honor
-// `DO_NOT_TRACK`. Config-based opt-out is layered on top by callers.
+// Two env vars. `DO_NOT_TRACK` opts the user out with any truthy value;
+// `DGREP_TELEMETRY=0` is a dgrep-specific override for users who want to
+// disable dgrep without affecting other tools on their machine.
+// Config-based opt-out is layered on top by callers.
 function envOptOut(): boolean {
   if (process.env.DO_NOT_TRACK && process.env.DO_NOT_TRACK !== "0") return true;
   if (process.env.DGREP_TELEMETRY === "0") return true;
