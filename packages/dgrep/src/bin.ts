@@ -4,12 +4,135 @@ import { hideBin } from "yargs/helpers";
 import pc from "picocolors";
 import { DgrepError } from "./lib/errors.js";
 import { loadAccent } from "./lib/theme.js";
+import { VERSION } from "./lib/version.js";
+import { loadConfig } from "./lib/config.js";
+import {
+  ensureInstallId,
+  isTelemetryEnabled,
+  showFirstRunNotice,
+} from "./lib/telemetry/optout.js";
+import {
+  captureCommandExecuted,
+  captureError,
+  captureInstall,
+} from "./lib/telemetry/events.js";
+import { isCI } from "./lib/telemetry/transport.js";
+
+function countFlags(): number {
+  return process.argv.slice(2).filter((a) => a.startsWith("-")).length;
+}
+
+// Runs before any command handler. On the very first invocation after install
+// (no `config.telemetry` block yet), prints the notice and persists an
+// install_id + `enabled: true`. Env-var opt-out skips both the notice and the
+// persistence, so users who set `DO_NOT_TRACK=1` never have an install_id
+// recorded.
+async function firstRunMiddleware(argv: Record<string, unknown>): Promise<void> {
+  const config = await loadConfig();
+  if (config.telemetry) return;
+
+  const state = isTelemetryEnabled(config);
+  if (!state.enabled) return;
+
+  if (!argv.json) {
+    await showFirstRunNotice();
+  }
+  const installId = await ensureInstallId();
+  void captureInstall(installId, {
+    os: process.platform,
+    arch: process.arch,
+    node_version: process.version,
+    dgrep_version: VERSION,
+    install_id: installId,
+    ci: isCI(),
+  });
+}
+
+// Fires dgrep_command_executed (always) and dgrep_error (on failure). On
+// success the fetch is not awaited — Node waits for pending I/O on natural
+// exit. On failure the caller races with a 1s timeout before rethrowing.
+async function fireCommandOutcome(opts: {
+  start: number;
+  success: boolean;
+  argv?: { _?: (string | number)[]; json?: boolean; "api-key"?: string };
+  err?: unknown;
+}): Promise<void> {
+  const config = await loadConfig();
+  const state = isTelemetryEnabled(config);
+  if (!state.enabled || !config.telemetry?.installId) return;
+
+  const installId = config.telemetry.installId;
+  const command = (opts.argv?._?.[0] as string | undefined) ?? "unknown";
+  const latencyMs = Date.now() - opts.start;
+  const jsonMode = !!opts.argv?.json;
+  const authenticated = !!(
+    config.apiKey ||
+    process.env.DOCFORK_API_KEY ||
+    opts.argv?.["api-key"]
+  );
+
+  const exitCode =
+    !opts.success && opts.err instanceof DgrepError
+      ? opts.err.exitCode
+      : opts.success
+        ? 0
+        : 1;
+
+  const tasks: Promise<void>[] = [
+    captureCommandExecuted(installId, {
+      command,
+      success: opts.success,
+      exit_code: exitCode,
+      latency_ms: latencyMs,
+      flag_count: countFlags(),
+      json_mode: jsonMode,
+      authenticated,
+      dgrep_version: VERSION,
+      node_version: process.version,
+      os: process.platform,
+    }),
+  ];
+
+  if (!opts.success) {
+    tasks.push(
+      captureError(installId, {
+        command,
+        error_class: opts.err instanceof Error ? opts.err.constructor.name : "Unknown",
+        exit_code: exitCode,
+        dgrep_version: VERSION,
+        node_version: process.version,
+        os: process.platform,
+      }),
+    );
+  }
+
+  await Promise.all(tasks);
+}
 
 async function main() {
+  const start = Date.now();
   await loadAccent();
-  await yargs(hideBin(process.argv))
+  let parsed: { _?: (string | number)[]; json?: boolean; "api-key"?: string } | undefined;
+
+  try {
+    parsed = (await buildCli().parse()) as typeof parsed;
+    void fireCommandOutcome({ start, success: true, argv: parsed });
+  } catch (err) {
+    // race the error-case flush with a 1s timeout so a slow collector never
+    // delays the exit by more than a second
+    await Promise.race([
+      fireCommandOutcome({ start, success: false, argv: parsed, err }),
+      new Promise((resolve) => setTimeout(resolve, 1000)),
+    ]);
+    throw err;
+  }
+}
+
+function buildCli() {
+  return yargs(hideBin(process.argv))
     .scriptName("dgrep")
     .usage("$0 [command]")
+    .middleware(firstRunMiddleware)
     .command("$0", "Initialize dgrep in current project", {}, async (argv) => {
       const { findProjectRoot, loadProjectConfig } = await import("./lib/project-config.js");
       const cwd = process.cwd();
@@ -198,6 +321,24 @@ async function main() {
         });
       }
     )
+    .command(
+      "telemetry <action>",
+      "Manage anonymous usage telemetry",
+      (yargs) => {
+        return yargs.positional("action", {
+          type: "string",
+          choices: ["status", "enable", "disable"] as const,
+          describe: "Telemetry action",
+        });
+      },
+      async (argv) => {
+        const action = argv.action as "status" | "enable" | "disable";
+        const mod = await import("./commands/telemetry.js");
+        if (action === "disable") await mod.telemetryDisable();
+        else if (action === "enable") await mod.telemetryEnable();
+        else await mod.telemetryStatus();
+      }
+    )
     .option("yes", {
       alias: "y",
       type: "boolean",
@@ -214,8 +355,7 @@ async function main() {
     .version()
     .help()
     .alias("h", "help")
-    .strict()
-    .parse();
+    .strict();
 }
 
 main().catch((err: unknown) => {
