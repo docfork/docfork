@@ -1,7 +1,7 @@
 import { AuthError, NetworkError, NotFoundError, RateLimitError } from "./errors.js";
+import { VERSION } from "./version.js";
 
 export const API_URL = "https://api.docfork.com/v1";
-const VERSION = "0.1.0";
 
 export interface DgrepAuthConfig {
   apiKey?: string;
@@ -24,6 +24,7 @@ export function parseErrorMessage(text: string, status: number, statusText: stri
 function headers(auth?: DgrepAuthConfig): Record<string, string> {
   const h: Record<string, string> = {
     "User-Agent": `dgrep/${VERSION}`,
+    "X-Docfork-Client": `dgrep/${VERSION}`,
     "Content-Type": "application/json",
     Accept: "application/json",
   };
