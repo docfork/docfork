@@ -6,16 +6,8 @@ import { DgrepError } from "./lib/errors.js";
 import { loadAccent } from "./lib/theme.js";
 import { VERSION } from "./lib/version.js";
 import { loadConfig } from "./lib/config.js";
-import {
-  ensureInstallId,
-  isTelemetryEnabled,
-  showFirstRunNotice,
-} from "./lib/telemetry/optout.js";
-import {
-  captureCommandExecuted,
-  captureError,
-  captureInstall,
-} from "./lib/telemetry/events.js";
+import { ensureInstallId, isTelemetryEnabled, showFirstRunNotice } from "./lib/telemetry/optout.js";
+import { captureCommandExecuted, captureError, captureInstall } from "./lib/telemetry/events.js";
 import { isCI } from "./lib/telemetry/transport.js";
 
 function countFlags(): number {
@@ -65,18 +57,10 @@ async function fireCommandOutcome(opts: {
   const command = (opts.argv?._?.[0] as string | undefined) ?? "unknown";
   const latencyMs = Date.now() - opts.start;
   const jsonMode = !!opts.argv?.json;
-  const authenticated = !!(
-    config.apiKey ||
-    process.env.DOCFORK_API_KEY ||
-    opts.argv?.["api-key"]
-  );
+  const authenticated = !!(config.apiKey || process.env.DOCFORK_API_KEY || opts.argv?.["api-key"]);
 
   const exitCode =
-    !opts.success && opts.err instanceof DgrepError
-      ? opts.err.exitCode
-      : opts.success
-        ? 0
-        : 1;
+    !opts.success && opts.err instanceof DgrepError ? opts.err.exitCode : opts.success ? 0 : 1;
 
   const tasks: Promise<void>[] = [
     captureCommandExecuted(installId, {
@@ -102,7 +86,7 @@ async function fireCommandOutcome(opts: {
         dgrep_version: VERSION,
         node_version: process.version,
         os: process.platform,
-      }),
+      })
     );
   }
 

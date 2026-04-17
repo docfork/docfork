@@ -14,7 +14,7 @@ export interface TelemetryState {
 // env + config combinations. Resolution order matches docfork.com/telemetry.
 export function isTelemetryEnabled(
   config: DgrepConfig,
-  env: NodeJS.ProcessEnv = process.env,
+  env: NodeJS.ProcessEnv = process.env
 ): TelemetryState {
   if (env.DO_NOT_TRACK && env.DO_NOT_TRACK !== "0") {
     return { enabled: false, source: "env:DO_NOT_TRACK" };
