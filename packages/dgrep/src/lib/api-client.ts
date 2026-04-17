@@ -24,6 +24,7 @@ export function parseErrorMessage(text: string, status: number, statusText: stri
 function headers(auth?: DgrepAuthConfig): Record<string, string> {
   const h: Record<string, string> = {
     "User-Agent": `dgrep/${VERSION}`,
+    "X-Docfork-Client": `dgrep/${VERSION}`,
     "Content-Type": "application/json",
     Accept: "application/json",
   };
