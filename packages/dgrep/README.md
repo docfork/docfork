@@ -123,6 +123,22 @@ dgrep search "server actions with forms" -l vercel/next.js --json --yes
 dgrep read <url> --json
 ```
 
+## Privacy & telemetry
+
+dgrep sends anonymous usage events — command name, success/failure, latency — so we can see which commands people use and where the CLI fails.
+
+dgrep **never** sends query text, doc content, URLs, file paths, API keys, or cabinet names. The event schema and collector endpoint are open source; you can inspect the payload with any network tap.
+
+Opt out any of three ways:
+
+```bash
+dgrep telemetry disable   # persist to ~/.dgrep/config.json
+DO_NOT_TRACK=1            # session-wide, any CLI
+DGREP_TELEMETRY=0         # dgrep-specific
+```
+
+Details: [docfork.com/telemetry](https://docfork.com/telemetry).
+
 ## Links
 
 - [dgrep docs](https://docfork.com/docs/dgrep)
