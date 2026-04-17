@@ -27,7 +27,7 @@ function envOptOut(): boolean {
 export function track(
   event: string,
   distinctId: string,
-  properties: Record<string, unknown>,
+  properties: Record<string, unknown>
 ): Promise<void> {
   if (envOptOut()) return Promise.resolve();
   try {
@@ -37,7 +37,7 @@ export function track(
       body: JSON.stringify({ event, distinct_id: distinctId, properties }),
     }).then(
       () => undefined,
-      () => undefined,
+      () => undefined
     );
   } catch {
     return Promise.resolve();
