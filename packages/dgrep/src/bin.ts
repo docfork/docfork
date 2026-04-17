@@ -4,6 +4,7 @@ import { hideBin } from "yargs/helpers";
 import pc from "picocolors";
 import { DgrepError } from "./lib/errors.js";
 import { loadAccent } from "./lib/theme.js";
+import { VERSION } from "./lib/version.js";
 
 async function main() {
   await loadAccent();
@@ -21,7 +22,7 @@ async function main() {
         const pc = (await import("picocolors")).default;
         console.log("");
         console.log(
-          `  ${pc.bold("dgrep")} ${pc.dim("v0.1.0")} — ${config.libraries.length} libraries tracked`
+          `  ${pc.bold("dgrep")} ${pc.dim(`v${VERSION}`)} — ${config.libraries.length} libraries tracked`
         );
         console.log("");
         console.log(`  ${pc.dim("dgrep search <query>")}    Search documentation`);
