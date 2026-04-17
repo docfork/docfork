@@ -5,6 +5,7 @@
   "description": "Docfork monorepo",
   "type": "module",
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "start": "turbo run start",
