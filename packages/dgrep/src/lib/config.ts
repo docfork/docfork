@@ -2,6 +2,12 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { homedir } from "node:os";
 
+export interface DgrepTelemetryConfig {
+  enabled: boolean;
+  installId: string;
+  firstRunAt: string;
+}
+
 export interface DgrepConfig {
   apiKey?: string;
   email?: string;
@@ -11,6 +17,7 @@ export interface DgrepConfig {
   claimedAt?: string;
   expiresAt?: string;
   accentColor?: string;
+  telemetry?: DgrepTelemetryConfig;
 }
 
 const CONFIG_DIR = join(homedir(), ".dgrep");
