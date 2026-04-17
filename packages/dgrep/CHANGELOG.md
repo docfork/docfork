@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.0](https://github.com/docfork/docfork/compare/dgrep-v0.1.2...dgrep-v0.2.0) (2026-04-17)
+
+
+### Features
+
+* **dgrep:** add fire-and-forget telemetry transport ([#127](https://github.com/docfork/docfork/issues/127)) ([3ed37ee](https://github.com/docfork/docfork/commit/3ed37eeca59e3c82daf540d3c6527c86355813d4))
+* **dgrep:** define telemetry event schemas ([#128](https://github.com/docfork/docfork/issues/128)) ([1f489e4](https://github.com/docfork/docfork/commit/1f489e40c52901a8ce60f84e06ab715422862437))
+* **dgrep:** send X-Docfork-Client header on every API request ([#126](https://github.com/docfork/docfork/issues/126)) ([3729dea](https://github.com/docfork/docfork/commit/3729dea917a75bbd8b1b1b2150706c47bc7d54df))
+* **dgrep:** wire opt-out telemetry into the CLI ([#129](https://github.com/docfork/docfork/issues/129)) ([3fc4c4c](https://github.com/docfork/docfork/commit/3fc4c4c4818622af083e1157e68842113b0ca670))
+
+
+### Documentation
+
+* **dgrep:** add Privacy & Telemetry README section ([#132](https://github.com/docfork/docfork/issues/132)) ([8b118ce](https://github.com/docfork/docfork/commit/8b118cef01b823cbbd342543baff48cfe452e633))
+
 ## [0.1.2](https://github.com/docfork/docfork/compare/dgrep-v0.1.1...dgrep-v0.1.2) (2026-04-15)
 
 
