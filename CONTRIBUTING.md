@@ -41,8 +41,6 @@ docfork/
 ├── packages/
 │   ├── mcp/       # MCP server (npm: docfork)
 │   └── dgrep/     # Documentation grounding CLI (npm: dgrep)
-├── apps/
-│   └── docs/      # Documentation site (Next.js + Fumadocs)
 └── plugins/       # IDE plugins
 ```
 
