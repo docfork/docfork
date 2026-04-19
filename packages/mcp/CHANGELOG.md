@@ -5,9 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 2.2.1
+## [2.2.1](https://github.com/docfork/docfork/compare/docfork-v2.2.0...docfork-v2.2.1) (2026-04-19)
 
-- Add `X-Docfork-Client: mcp-server/<version>` header on backend requests so PostHog events can tag `client_surface="mcp-server"` (previously relied on header-absence inference).
+
+### Features
+
+* **mcp:** emit X-Docfork-Client header for cross-surface tagging ([#136](https://github.com/docfork/docfork/issues/136)) ([98bc7ef](https://github.com/docfork/docfork/commit/98bc7ef22bbfc34e7d9e6cb49c5fe9d965cd4d80))
+* Add `X-Docfork-Client: mcp-server/<version>` header on backend requests so the upstream API service can tag requests by client surface.
 
 ## [2.2.0](https://github.com/docfork/docfork/compare/docfork-v2.1.0...docfork-v2.2.0) (2026-04-14)
 
