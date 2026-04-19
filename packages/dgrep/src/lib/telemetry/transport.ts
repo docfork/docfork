@@ -1,3 +1,5 @@
+import { VERSION } from "../version.js";
+
 const TELEMETRY_URL = "https://api.docfork.com/v1/telemetry";
 
 export function isCI(): boolean {
@@ -32,7 +34,10 @@ export function track(
   try {
     return fetch(TELEMETRY_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Docfork-Client": `dgrep/${VERSION}`,
+      },
       body: JSON.stringify({ event, distinct_id: distinctId, properties }),
     }).then(
       () => undefined,
