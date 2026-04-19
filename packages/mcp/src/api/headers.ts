@@ -15,7 +15,12 @@ export function generateHeaders(auth?: DocforkAuthConfig): Record<string, string
     // events with client_surface="mcp-server" based on this header; the
     // forwarded X-Docfork-Client-Info below carries the upstream IDE
     // (Cursor, Claude Desktop, Inspector) as upstream_client.
-    "X-Docfork-Client": `mcp-server/${SERVER_VERSION}`,
+    //
+    // `?? "unknown"` keeps the emission readable if SERVER_VERSION ever
+    // regresses (version loader glitch, extra-files drift across
+    // package.json/server.json/gemini-extension.json) instead of
+    // silently poisoning attribution with "mcp-server/undefined".
+    "X-Docfork-Client": `mcp-server/${SERVER_VERSION ?? "unknown"}`,
   };
 
   if (auth?.clientInfo) {
