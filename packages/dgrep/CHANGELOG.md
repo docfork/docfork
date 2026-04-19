@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- Send `X-Docfork-Client: dgrep/<version>` header on telemetry POSTs for server-side consistency with real-API traffic (previously only set on API calls, not /v1/telemetry).
+
 ## [0.2.0](https://github.com/docfork/docfork/compare/dgrep-v0.1.2...dgrep-v0.2.0) (2026-04-17)
 
 
