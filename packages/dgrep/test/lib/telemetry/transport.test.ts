@@ -54,6 +54,20 @@ describe("track", () => {
     });
   });
 
+  it("sends X-Docfork-Client header so the backend can tag client_surface from the header", async () => {
+    let clientHeader: string | null = null;
+    server.use(
+      http.post(TELEMETRY_URL, ({ request }) => {
+        clientHeader = request.headers.get("x-docfork-client");
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+
+    await track("dgrep_command_executed", "550e8400-e29b-41d4-a716-446655440000", {});
+
+    expect(clientHeader).toMatch(/^dgrep\/\d+\.\d+\.\d+/);
+  });
+
   it("resolves without throwing when the server returns an error", async () => {
     server.use(
       http.post(TELEMETRY_URL, () => new HttpResponse(null, { status: 500 })),
