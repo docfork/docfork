@@ -36,7 +36,10 @@ export function track(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Docfork-Client": `dgrep/${VERSION}`,
+        // `?? "unknown"` keeps the emission readable if the VERSION import
+        // ever regresses (build glitch, circular import) instead of
+        // silently poisoning attribution with "dgrep/undefined".
+        "X-Docfork-Client": `dgrep/${VERSION ?? "unknown"}`,
       },
       body: JSON.stringify({ event, distinct_id: distinctId, properties }),
     }).then(
