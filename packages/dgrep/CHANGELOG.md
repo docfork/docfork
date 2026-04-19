@@ -1,8 +1,12 @@
 # Changelog
 
-## 0.2.1
+## [0.2.1](https://github.com/docfork/docfork/compare/dgrep-v0.2.0...dgrep-v0.2.1) (2026-04-19)
 
-- Send `X-Docfork-Client: dgrep/<version>` header on telemetry POSTs for server-side consistency with real-API traffic (previously only set on API calls, not /v1/telemetry).
+
+### Features
+
+* **dgrep:** send X-Docfork-Client header on /v1/telemetry POST ([#135](https://github.com/docfork/docfork/issues/135)) ([65ad429](https://github.com/docfork/docfork/commit/65ad4298e48e0101d9432040ba0eff48906fc608))
+* Send `X-Docfork-Client: dgrep/<version>` header on telemetry POSTs for server-side consistency with real-API traffic (previously only set on API calls, not /v1/telemetry).
 
 ## [0.2.0](https://github.com/docfork/docfork/compare/dgrep-v0.1.2...dgrep-v0.2.0) (2026-04-17)
 
@@ -69,11 +73,3 @@
 * **dgrep:** correct WorkOS device flow endpoints and content type ([1677129](https://github.com/docfork/docfork/commit/16771299bb587f3d7adb6677f6f4744d667e9838))
 * **dgrep:** fix undefined apiKey in wizard manual command display ([19e3af0](https://github.com/docfork/docfork/commit/19e3af03ad6bdcd572f3ff05a72a884ffab73f93))
 * **dgrep:** login preserves API key on claim, logout checks claimedAt ([4c6ade4](https://github.com/docfork/docfork/commit/4c6ade479fa2ecaec8f3159a808ad81dc6b6442e))
-* **dgrep:** login works standalone without unclaimed key, default accent blueBright ([ffb00e1](https://github.com/docfork/docfork/commit/ffb00e1547066d81ebe84a4d1630a2acc1058d61))
-* **dgrep:** mock loadConfig in auth test to prevent pollution, update description ([4e9ba98](https://github.com/docfork/docfork/commit/4e9ba9809caabc98dfead841cf1ac70ba744ef97))
-* **dgrep:** remove unused imports (lint) ([714919e](https://github.com/docfork/docfork/commit/714919ea1edbb5f5173671fc55939f268ca93cee))
-* **dgrep:** rename --no-save to --save with boolean negation ([8f19a66](https://github.com/docfork/docfork/commit/8f19a66bebc8233ae1f962e6f9944a00d35d5f93))
-* **dgrep:** replace all stale dgrep claim references with dgrep login ([a33c9e2](https://github.com/docfork/docfork/commit/a33c9e2582f34cc2acb5d305a96fa829ea2b31eb))
-* **dgrep:** update tests for new config format + POST search + lazy auth ([bcd4c2d](https://github.com/docfork/docfork/commit/bcd4c2dbdb019c619c94d13c4e684e4dd6b3d651))
-* **dgrep:** update wizard test mock to match ProvisionResponse shape ([c633849](https://github.com/docfork/docfork/commit/c633849f837761c91a1f89a08825b08c3ba1b825))
-* **dgrep:** use http type for Claude Code MCP config per official docs ([3c9e542](https://github.com/docfork/docfork/commit/3c9e5425cb1e7ad204dd30c4fe0d0aaa44c12e07))
