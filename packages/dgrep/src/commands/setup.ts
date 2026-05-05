@@ -6,9 +6,7 @@ import { agentDisplayList, detectAgents, writeMcpConfigForAgent } from "../lib/a
 import type { DetectedAgent } from "../lib/agents.js";
 
 export interface SetupOptions {
-  cursor?: boolean;
-  claude?: boolean;
-  opencode?: boolean;
+  agents?: string[];
   yes?: boolean;
   apiKey?: string;
   cwd?: string;
@@ -33,17 +31,11 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
   // detect agents
   const allAgents = await detectAgents(cwd);
 
-  // filter by flags if specified
-  const filterFlags = options.cursor || options.claude || options.opencode;
+  // filter to requested subset if --agent specified
   let agents: DetectedAgent[];
-
-  if (filterFlags) {
-    agents = allAgents.filter((a) => {
-      if (options.cursor && a.name === "cursor") return true;
-      if (options.claude && a.name === "claude-code") return true;
-      if (options.opencode && a.name === "opencode") return true;
-      return false;
-    });
+  if (options.agents && options.agents.length > 0) {
+    const requested = new Set(options.agents);
+    agents = allAgents.filter((a) => requested.has(a.name));
 
     if (agents.length === 0) {
       p.log.warning("Requested agents not detected in this project.");

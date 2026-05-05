@@ -6,6 +6,7 @@ import { DgrepError } from "./lib/errors.js";
 import { loadAccent } from "./lib/theme.js";
 import { VERSION } from "./lib/version.js";
 import { loadConfig } from "./lib/config.js";
+import { AGENTS } from "./lib/agents.js";
 import { ensureInstallId, isTelemetryEnabled, showFirstRunNotice } from "./lib/telemetry/optout.js";
 import { captureCommandExecuted, captureError, captureInstall } from "./lib/telemetry/events.js";
 import { isCI } from "./lib/telemetry/transport.js";
@@ -150,18 +151,17 @@ function buildCli() {
       "setup",
       "Setup IDE agent integrations",
       (yargs) => {
-        return yargs
-          .option("cursor", { type: "boolean", describe: "Setup Cursor only" })
-          .option("claude", { type: "boolean", describe: "Setup Claude Code only" })
-          .option("opencode", { type: "boolean", describe: "Setup OpenCode only" })
-          .option("all", { type: "boolean", describe: "Setup all detected agents" });
+        return yargs.option("agent", {
+          type: "string",
+          array: true,
+          choices: Object.keys(AGENTS),
+          describe: "Limit setup to one or more agents (default: all detected)",
+        });
       },
       async (argv) => {
         const { setup } = await import("./commands/setup.js");
         await setup({
-          cursor: argv.cursor as boolean | undefined,
-          claude: argv.claude as boolean | undefined,
-          opencode: argv.opencode as boolean | undefined,
+          agents: argv.agent as string[] | undefined,
           yes: argv.yes as boolean | undefined,
           apiKey: argv["api-key"] as string | undefined,
         });
