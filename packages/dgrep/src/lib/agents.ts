@@ -1,8 +1,12 @@
 import { access, readFile, writeFile, copyFile, mkdir } from "node:fs/promises";
-import { join, dirname } from "node:path";
+import { join, dirname, delimiter } from "node:path";
 import { constants } from "node:fs";
 import { homedir } from "node:os";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
+
+const execFileAsync = promisify(execFile);
 
 // -- Types -----------------------------------
 
@@ -12,18 +16,37 @@ export type AgentType =
   | "opencode"
   | "codex"
   | "vscode"
-  | "windsurf";
+  | "windsurf"
+  | "amp";
 
-// path is relative to project root for project-dir, relative to homedir for user-dir
+// path is relative to project root for project-dir, relative to homedir for user-dir;
+// binary kind probes for an executable on $PATH (cross-platform)
 export type ProbeSpec =
   | { kind: "project-dir"; path: string }
-  | { kind: "user-dir"; path: string };
+  | { kind: "user-dir"; path: string }
+  | { kind: "binary"; name: string };
 
 export type WriteFormat = "json" | "toml";
+
+// file: read/merge/write a config file. shell: invoke a CLI that owns the config
+export type AgentWriter =
+  | {
+      kind: "file";
+      // resolved against cwd (project-dir) or homedir (user-dir)
+      configPath: string;
+      format?: WriteFormat; // defaults to "json"
+      buildServerEntry: () => Record<string, unknown>;
+      mergeConfig: (
+        existing: Record<string, unknown>,
+        serverEntry: Record<string, unknown>
+      ) => Record<string, unknown>;
+    }
+  | { kind: "shell"; bin: string; args: string[] };
 
 export interface DetectedAgent {
   name: AgentType;
   displayName: string;
+  // for file writers: absolute config path. for shell writers: a human-readable command preview.
   configPath: string;
 }
 
@@ -31,18 +54,9 @@ export interface AgentConfig {
   name: AgentType;
   displayName: string;
   probe: ProbeSpec;
-  // resolved against cwd (project-dir) or homedir (user-dir)
-  configPath: string;
-  // defaults to "json" when omitted
-  writeFormat?: WriteFormat;
+  writer: AgentWriter;
   // optional one-line hint shown after a successful write
   postWriteNote?: string;
-  // url-only stanza; the IDE handles MCP-spec OAuth on first connect
-  buildServerEntry: () => Record<string, unknown>;
-  mergeConfig: (
-    existing: Record<string, unknown>,
-    serverEntry: Record<string, unknown>
-  ) => Record<string, unknown>;
 }
 
 // -- Registry -----------------------------------
@@ -52,118 +66,184 @@ export const AGENTS: Record<AgentType, AgentConfig> = {
     name: "cursor",
     displayName: "Cursor",
     probe: { kind: "project-dir", path: ".cursor" },
-    configPath: ".cursor/mcp.json",
-    buildServerEntry: () => ({
-      url: "https://mcp.docfork.com/mcp",
-    }),
-    mergeConfig: (existing, entry) => {
-      const mcpServers = (existing.mcpServers ?? {}) as Record<string, unknown>;
-      mcpServers["docfork"] = entry;
-      return { ...existing, mcpServers };
+    writer: {
+      kind: "file",
+      configPath: ".cursor/mcp.json",
+      buildServerEntry: () => ({
+        url: "https://mcp.docfork.com/mcp",
+      }),
+      mergeConfig: (existing, entry) => {
+        const mcpServers = (existing.mcpServers ?? {}) as Record<string, unknown>;
+        mcpServers["docfork"] = entry;
+        return { ...existing, mcpServers };
+      },
     },
   },
   "claude-code": {
     name: "claude-code",
     displayName: "Claude Code",
     probe: { kind: "project-dir", path: ".claude" },
-    configPath: ".mcp.json",
-    buildServerEntry: () => ({
-      type: "http",
-      url: "https://mcp.docfork.com/mcp",
-    }),
-    mergeConfig: (existing, entry) => {
-      const mcpServers = (existing.mcpServers ?? {}) as Record<string, unknown>;
-      mcpServers["docfork"] = entry;
-      return { ...existing, mcpServers };
+    writer: {
+      kind: "file",
+      configPath: ".mcp.json",
+      buildServerEntry: () => ({
+        type: "http",
+        url: "https://mcp.docfork.com/mcp",
+      }),
+      mergeConfig: (existing, entry) => {
+        const mcpServers = (existing.mcpServers ?? {}) as Record<string, unknown>;
+        mcpServers["docfork"] = entry;
+        return { ...existing, mcpServers };
+      },
     },
   },
   opencode: {
     name: "opencode",
     displayName: "OpenCode",
     probe: { kind: "project-dir", path: ".opencode" },
-    configPath: "opencode.json",
-    buildServerEntry: () => ({
-      type: "remote",
-      url: "https://mcp.docfork.com/mcp",
-      enabled: true,
-    }),
-    mergeConfig: (existing, entry) => {
-      const mcp = (existing.mcp ?? {}) as Record<string, unknown>;
-      mcp["docfork"] = entry;
-      return { ...existing, mcp };
+    writer: {
+      kind: "file",
+      configPath: "opencode.json",
+      buildServerEntry: () => ({
+        type: "remote",
+        url: "https://mcp.docfork.com/mcp",
+        enabled: true,
+      }),
+      mergeConfig: (existing, entry) => {
+        const mcp = (existing.mcp ?? {}) as Record<string, unknown>;
+        mcp["docfork"] = entry;
+        return { ...existing, mcp };
+      },
     },
   },
   codex: {
     name: "codex",
     displayName: "OpenAI Codex",
     probe: { kind: "user-dir", path: ".codex" },
-    configPath: ".codex/config.toml",
-    writeFormat: "toml",
     postWriteNote: "Run `codex mcp login docfork` to complete OAuth.",
-    buildServerEntry: () => ({
-      url: "https://mcp.docfork.com/mcp",
-    }),
-    mergeConfig: (existing, entry) => {
-      const mcpServers = (existing.mcp_servers ?? {}) as Record<string, unknown>;
-      mcpServers["docfork"] = entry;
-      return { ...existing, mcp_servers: mcpServers };
+    writer: {
+      kind: "file",
+      configPath: ".codex/config.toml",
+      format: "toml",
+      buildServerEntry: () => ({
+        url: "https://mcp.docfork.com/mcp",
+      }),
+      mergeConfig: (existing, entry) => {
+        const mcpServers = (existing.mcp_servers ?? {}) as Record<string, unknown>;
+        mcpServers["docfork"] = entry;
+        return { ...existing, mcp_servers: mcpServers };
+      },
     },
   },
   vscode: {
     name: "vscode",
     displayName: "VS Code",
     probe: { kind: "project-dir", path: ".vscode" },
-    configPath: ".vscode/mcp.json",
-    buildServerEntry: () => ({
-      type: "http",
-      url: "https://mcp.docfork.com/mcp",
-    }),
-    mergeConfig: (existing, entry) => {
-      const servers = (existing.servers ?? {}) as Record<string, unknown>;
-      servers["docfork"] = entry;
-      return { ...existing, servers };
+    writer: {
+      kind: "file",
+      configPath: ".vscode/mcp.json",
+      buildServerEntry: () => ({
+        type: "http",
+        url: "https://mcp.docfork.com/mcp",
+      }),
+      mergeConfig: (existing, entry) => {
+        const servers = (existing.servers ?? {}) as Record<string, unknown>;
+        servers["docfork"] = entry;
+        return { ...existing, servers };
+      },
     },
   },
   windsurf: {
     name: "windsurf",
     displayName: "Windsurf",
     probe: { kind: "user-dir", path: ".codeium/windsurf" },
-    configPath: ".codeium/windsurf/mcp_config.json",
-    // windsurf uses serverUrl (not url); docs say it supports OAuth for each transport type
-    buildServerEntry: () => ({
-      serverUrl: "https://mcp.docfork.com/mcp",
-    }),
-    mergeConfig: (existing, entry) => {
-      const mcpServers = (existing.mcpServers ?? {}) as Record<string, unknown>;
-      mcpServers["docfork"] = entry;
-      return { ...existing, mcpServers };
+    writer: {
+      kind: "file",
+      configPath: ".codeium/windsurf/mcp_config.json",
+      // windsurf uses serverUrl (not url); docs say OAuth is supported per transport
+      buildServerEntry: () => ({
+        serverUrl: "https://mcp.docfork.com/mcp",
+      }),
+      mergeConfig: (existing, entry) => {
+        const mcpServers = (existing.mcpServers ?? {}) as Record<string, unknown>;
+        mcpServers["docfork"] = entry;
+        return { ...existing, mcpServers };
+      },
+    },
+  },
+  amp: {
+    name: "amp",
+    displayName: "Amp",
+    probe: { kind: "binary", name: "amp" },
+    // per docs, amp auto-starts OAuth on first connect when no headers are configured
+    writer: {
+      kind: "shell",
+      bin: "amp",
+      args: ["mcp", "add", "docfork", "https://mcp.docfork.com/mcp"],
     },
   },
 };
 
 // -- Detection -----------------------------------
 
-function probeRoot(probe: ProbeSpec, cwd: string, home: string): string {
-  return probe.kind === "project-dir" ? cwd : home;
+async function isOnPath(name: string, pathEnv: string | undefined): Promise<boolean> {
+  if (!pathEnv) return false;
+  const candidates = process.platform === "win32" ? [name, `${name}.exe`, `${name}.cmd`] : [name];
+  for (const dir of pathEnv.split(delimiter).filter(Boolean)) {
+    for (const cand of candidates) {
+      try {
+        await access(join(dir, cand), constants.X_OK);
+        return true;
+      } catch {
+        // not in this dir
+      }
+    }
+  }
+  return false;
 }
 
-export async function detectAgents(cwd?: string, home?: string): Promise<DetectedAgent[]> {
+async function probeMatches(
+  probe: ProbeSpec,
+  cwd: string,
+  home: string,
+  pathEnv: string | undefined
+): Promise<boolean> {
+  if (probe.kind === "binary") return isOnPath(probe.name, pathEnv);
+  const root = probe.kind === "project-dir" ? cwd : home;
+  try {
+    await access(join(root, probe.path), constants.F_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function detectedConfigPath(agent: AgentConfig, cwd: string, home: string): string {
+  if (agent.writer.kind === "shell") {
+    return [agent.writer.bin, ...agent.writer.args].join(" ");
+  }
+  const root = agent.probe.kind === "project-dir" ? cwd : home;
+  return join(root, agent.writer.configPath);
+}
+
+export async function detectAgents(
+  cwd?: string,
+  home?: string,
+  pathEnv?: string
+): Promise<DetectedAgent[]> {
   const dir = cwd ?? process.cwd();
   const userHome = home ?? homedir();
+  const path = pathEnv ?? process.env.PATH;
   const detected: DetectedAgent[] = [];
 
   await Promise.all(
     Object.values(AGENTS).map(async (agent) => {
-      const root = probeRoot(agent.probe, dir, userHome);
-      try {
-        await access(join(root, agent.probe.path), constants.F_OK);
+      if (await probeMatches(agent.probe, dir, userHome, path)) {
         detected.push({
           name: agent.name,
           displayName: agent.displayName,
-          configPath: join(root, agent.configPath),
+          configPath: detectedConfigPath(agent, dir, userHome),
         });
-      } catch {
-        // probe target missing
       }
     })
   );
@@ -184,10 +264,12 @@ export function agentDisplayList(): string {
 
 // -- Config writing -----------------------------------
 
-export async function writeMcpConfigForAgent(agent: DetectedAgent): Promise<void> {
-  const def = AGENTS[agent.name];
-  const serverEntry = def.buildServerEntry();
-  const format = def.writeFormat ?? "json";
+async function writeFileWriter(
+  agent: DetectedAgent,
+  writer: Extract<AgentWriter, { kind: "file" }>
+): Promise<void> {
+  const serverEntry = writer.buildServerEntry();
+  const format = writer.format ?? "json";
 
   // read existing config; back it up before modifying
   let existing: Record<string, unknown> = {};
@@ -202,10 +284,20 @@ export async function writeMcpConfigForAgent(agent: DetectedAgent): Promise<void
     // file doesn't exist, start fresh
   }
 
-  const updated = def.mergeConfig(existing, serverEntry);
+  const updated = writer.mergeConfig(existing, serverEntry);
 
   await mkdir(dirname(agent.configPath), { recursive: true });
   const serialized =
     format === "toml" ? stringifyToml(updated) + "\n" : JSON.stringify(updated, null, 2) + "\n";
   await writeFile(agent.configPath, serialized);
+}
+
+export async function writeMcpConfigForAgent(agent: DetectedAgent): Promise<void> {
+  const def = AGENTS[agent.name];
+  if (def.writer.kind === "file") {
+    await writeFileWriter(agent, def.writer);
+    return;
+  }
+  // shell: let the agent's CLI own its config (handles its own merge semantics)
+  await execFileAsync(def.writer.bin, def.writer.args);
 }

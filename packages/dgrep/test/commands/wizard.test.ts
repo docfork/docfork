@@ -11,6 +11,8 @@ beforeEach(async () => {
   tempHome = await mkdtemp(join(tmpdir(), "dgrep-wizard-home-"));
   // isolate user-dir probes (codex, etc.) from the host's real home
   vi.stubEnv("HOME", tempHome);
+  // isolate binary probes (amp, etc.) from the host's $PATH
+  vi.stubEnv("PATH", "");
 });
 
 afterEach(async () => {

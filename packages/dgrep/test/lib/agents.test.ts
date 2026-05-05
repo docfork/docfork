@@ -1,45 +1,54 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { join } from "node:path";
-import { mkdtemp, rm, mkdir, readFile } from "node:fs/promises";
+import { mkdtemp, rm, mkdir, readFile, writeFile, chmod } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { parse as parseToml } from "smol-toml";
 import { detectAgents, writeMcpConfigForAgent, getAgentDefinition } from "../../src/lib/agents.js";
 
 let tempDir: string;
 let tempHome: string;
+let tempBin: string; // fake $PATH directory for binary probes
 
 beforeEach(async () => {
   tempDir = await mkdtemp(join(tmpdir(), "dgrep-agents-test-"));
   tempHome = await mkdtemp(join(tmpdir(), "dgrep-agents-home-"));
+  tempBin = await mkdtemp(join(tmpdir(), "dgrep-agents-bin-"));
 });
 
 afterEach(async () => {
   await rm(tempDir, { recursive: true, force: true });
   await rm(tempHome, { recursive: true, force: true });
+  await rm(tempBin, { recursive: true, force: true });
 });
+
+async function installFakeBin(name: string): Promise<void> {
+  const path = join(tempBin, name);
+  await writeFile(path, "#!/bin/sh\nexit 0\n");
+  await chmod(path, 0o755);
+}
 
 describe("detectAgents", () => {
   it("detects Cursor when .cursor/ exists", async () => {
     await mkdir(join(tempDir, ".cursor"));
-    const agents = await detectAgents(tempDir, tempHome);
+    const agents = await detectAgents(tempDir, tempHome, tempBin);
     expect(agents.some((a) => a.name === "cursor")).toBe(true);
   });
 
   it("detects Claude Code when .claude/ exists", async () => {
     await mkdir(join(tempDir, ".claude"));
-    const agents = await detectAgents(tempDir, tempHome);
+    const agents = await detectAgents(tempDir, tempHome, tempBin);
     expect(agents.some((a) => a.name === "claude-code")).toBe(true);
   });
 
   it("detects OpenCode when .opencode/ exists", async () => {
     await mkdir(join(tempDir, ".opencode"));
-    const agents = await detectAgents(tempDir, tempHome);
+    const agents = await detectAgents(tempDir, tempHome, tempBin);
     expect(agents.some((a) => a.name === "opencode")).toBe(true);
   });
 
   it("detects VS Code when .vscode/ exists", async () => {
     await mkdir(join(tempDir, ".vscode"));
-    const agents = await detectAgents(tempDir, tempHome);
+    const agents = await detectAgents(tempDir, tempHome, tempBin);
     expect(agents.some((a) => a.name === "vscode")).toBe(true);
     const vscode = agents.find((a) => a.name === "vscode");
     expect(vscode?.configPath).toBe(join(tempDir, ".vscode", "mcp.json"));
@@ -49,18 +58,31 @@ describe("detectAgents", () => {
     await mkdir(join(tempDir, ".cursor"));
     await mkdir(join(tempDir, ".claude"));
     await mkdir(join(tempDir, ".opencode"));
-    const agents = await detectAgents(tempDir, tempHome);
+    const agents = await detectAgents(tempDir, tempHome, tempBin);
     expect(agents.length).toBe(3);
   });
 
   it("returns empty when no agents found", async () => {
-    const agents = await detectAgents(tempDir, tempHome);
+    const agents = await detectAgents(tempDir, tempHome, tempBin);
     expect(agents).toEqual([]);
+  });
+
+  it("detects Amp when amp binary is on PATH", async () => {
+    await installFakeBin("amp");
+    const agents = await detectAgents(tempDir, tempHome, tempBin);
+    expect(agents.some((a) => a.name === "amp")).toBe(true);
+    const amp = agents.find((a) => a.name === "amp");
+    expect(amp?.configPath).toBe("amp mcp add docfork https://mcp.docfork.com/mcp");
+  });
+
+  it("does not detect Amp when its binary is missing from PATH", async () => {
+    const agents = await detectAgents(tempDir, tempHome, tempBin);
+    expect(agents.some((a) => a.name === "amp")).toBe(false);
   });
 
   it("detects Windsurf when ~/.codeium/windsurf/ exists in home", async () => {
     await mkdir(join(tempHome, ".codeium", "windsurf"), { recursive: true });
-    const agents = await detectAgents(tempDir, tempHome);
+    const agents = await detectAgents(tempDir, tempHome, tempBin);
     expect(agents.some((a) => a.name === "windsurf")).toBe(true);
     const ws = agents.find((a) => a.name === "windsurf");
     expect(ws?.configPath).toBe(join(tempHome, ".codeium", "windsurf", "mcp_config.json"));
@@ -68,7 +90,7 @@ describe("detectAgents", () => {
 
   it("detects Codex when ~/.codex/ exists in home", async () => {
     await mkdir(join(tempHome, ".codex"));
-    const agents = await detectAgents(tempDir, tempHome);
+    const agents = await detectAgents(tempDir, tempHome, tempBin);
     expect(agents.some((a) => a.name === "codex")).toBe(true);
     const codex = agents.find((a) => a.name === "codex");
     expect(codex?.configPath).toBe(join(tempHome, ".codex", "config.toml"));
@@ -78,7 +100,7 @@ describe("detectAgents", () => {
     await mkdir(join(tempDir, ".cursor"));
     await mkdir(join(tempDir, ".claude"));
     await mkdir(join(tempDir, ".opencode"));
-    const agents = await detectAgents(tempDir, tempHome);
+    const agents = await detectAgents(tempDir, tempHome, tempBin);
 
     const cursor = agents.find((a) => a.name === "cursor");
     expect(cursor?.configPath).toBe(join(tempDir, ".cursor", "mcp.json"));
@@ -214,6 +236,7 @@ describe("getAgentDefinition", () => {
     expect(getAgentDefinition("codex")).toBeDefined();
     expect(getAgentDefinition("vscode")).toBeDefined();
     expect(getAgentDefinition("windsurf")).toBeDefined();
+    expect(getAgentDefinition("amp")).toBeDefined();
   });
 
   it("returns undefined for unknown agent", () => {
