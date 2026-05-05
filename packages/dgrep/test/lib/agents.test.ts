@@ -37,6 +37,14 @@ describe("detectAgents", () => {
     expect(agents.some((a) => a.name === "opencode")).toBe(true);
   });
 
+  it("detects VS Code when .vscode/ exists", async () => {
+    await mkdir(join(tempDir, ".vscode"));
+    const agents = await detectAgents(tempDir, tempHome);
+    expect(agents.some((a) => a.name === "vscode")).toBe(true);
+    const vscode = agents.find((a) => a.name === "vscode");
+    expect(vscode?.configPath).toBe(join(tempDir, ".vscode", "mcp.json"));
+  });
+
   it("detects multiple agents", async () => {
     await mkdir(join(tempDir, ".cursor"));
     await mkdir(join(tempDir, ".claude"));
@@ -110,6 +118,22 @@ describe("writeMcpConfigForAgent", () => {
     expect(config.mcp.docfork.headers).toBeUndefined();
   });
 
+  it("writes VS Code config under top-level servers key", async () => {
+    await mkdir(join(tempDir, ".vscode"));
+    const agent = {
+      name: "vscode" as const,
+      displayName: "VS Code",
+      configPath: join(tempDir, ".vscode", "mcp.json"),
+    };
+
+    await writeMcpConfigForAgent(agent);
+
+    const config = JSON.parse(await readFile(join(tempDir, ".vscode", "mcp.json"), "utf-8"));
+    expect(config.servers.docfork.type).toBe("http");
+    expect(config.servers.docfork.url).toBe("https://mcp.docfork.com/mcp");
+    expect(config.servers.docfork.headers).toBeUndefined();
+  });
+
   it("writes Codex config as TOML under [mcp_servers.docfork]", async () => {
     await mkdir(join(tempHome, ".codex"));
     const agent = {
@@ -165,6 +189,7 @@ describe("getAgentDefinition", () => {
     expect(getAgentDefinition("claude-code")).toBeDefined();
     expect(getAgentDefinition("opencode")).toBeDefined();
     expect(getAgentDefinition("codex")).toBeDefined();
+    expect(getAgentDefinition("vscode")).toBeDefined();
   });
 
   it("returns undefined for unknown agent", () => {

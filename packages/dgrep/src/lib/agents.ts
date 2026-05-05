@@ -6,7 +6,7 @@ import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 
 // -- Types -----------------------------------
 
-export type AgentType = "cursor" | "claude-code" | "opencode" | "codex";
+export type AgentType = "cursor" | "claude-code" | "opencode" | "codex" | "vscode";
 
 // path is relative to project root for project-dir, relative to homedir for user-dir
 export type ProbeSpec =
@@ -101,6 +101,21 @@ export const AGENTS: Record<AgentType, AgentConfig> = {
       const mcpServers = (existing.mcp_servers ?? {}) as Record<string, unknown>;
       mcpServers["docfork"] = entry;
       return { ...existing, mcp_servers: mcpServers };
+    },
+  },
+  vscode: {
+    name: "vscode",
+    displayName: "VS Code",
+    probe: { kind: "project-dir", path: ".vscode" },
+    configPath: ".vscode/mcp.json",
+    buildServerEntry: () => ({
+      type: "http",
+      url: "https://mcp.docfork.com/mcp",
+    }),
+    mergeConfig: (existing, entry) => {
+      const servers = (existing.servers ?? {}) as Record<string, unknown>;
+      servers["docfork"] = entry;
+      return { ...existing, servers };
     },
   },
 };
