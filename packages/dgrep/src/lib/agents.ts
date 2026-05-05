@@ -17,7 +17,8 @@ export type AgentType =
   | "codex"
   | "vscode"
   | "windsurf"
-  | "amp";
+  | "amp"
+  | "factory";
 
 // path is relative to project root for project-dir, relative to homedir for user-dir;
 // binary kind probes for an executable on $PATH (cross-platform)
@@ -180,6 +181,17 @@ export const AGENTS: Record<AgentType, AgentConfig> = {
       kind: "shell",
       bin: "amp",
       args: ["mcp", "add", "docfork", "https://mcp.docfork.com/mcp"],
+    },
+  },
+  factory: {
+    name: "factory",
+    displayName: "Factory",
+    probe: { kind: "binary", name: "droid" },
+    postWriteNote: "Run `droid` and use /mcp to complete OAuth.",
+    writer: {
+      kind: "shell",
+      bin: "droid",
+      args: ["mcp", "add", "docfork", "https://mcp.docfork.com/mcp", "--type", "http"],
     },
   },
 };

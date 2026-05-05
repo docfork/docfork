@@ -80,6 +80,16 @@ describe("detectAgents", () => {
     expect(agents.some((a) => a.name === "amp")).toBe(false);
   });
 
+  it("detects Factory when droid binary is on PATH", async () => {
+    await installFakeBin("droid");
+    const agents = await detectAgents(tempDir, tempHome, tempBin);
+    expect(agents.some((a) => a.name === "factory")).toBe(true);
+    const factory = agents.find((a) => a.name === "factory");
+    expect(factory?.configPath).toBe(
+      "droid mcp add docfork https://mcp.docfork.com/mcp --type http"
+    );
+  });
+
   it("detects Windsurf when ~/.codeium/windsurf/ exists in home", async () => {
     await mkdir(join(tempHome, ".codeium", "windsurf"), { recursive: true });
     const agents = await detectAgents(tempDir, tempHome, tempBin);
@@ -237,6 +247,7 @@ describe("getAgentDefinition", () => {
     expect(getAgentDefinition("vscode")).toBeDefined();
     expect(getAgentDefinition("windsurf")).toBeDefined();
     expect(getAgentDefinition("amp")).toBeDefined();
+    expect(getAgentDefinition("factory")).toBeDefined();
   });
 
   it("returns undefined for unknown agent", () => {
