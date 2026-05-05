@@ -2,9 +2,8 @@ import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { resolveAuth } from "../lib/auth.js";
-import { detectAgents } from "../lib/agents.js";
+import { agentDisplayList, detectAgents, writeMcpConfigForAgent } from "../lib/agents.js";
 import type { DetectedAgent } from "../lib/agents.js";
-import { writeMcpConfigForAgent } from "../lib/agents.js";
 
 export interface SetupOptions {
   cursor?: boolean;
@@ -56,7 +55,7 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
   }
 
   if (agents.length === 0) {
-    p.log.info("No IDE agents detected (Cursor, Claude Code, OpenCode).");
+    p.log.info(`No IDE agents detected (${agentDisplayList()}).`);
     p.outro("Nothing to set up.");
     return;
   }

@@ -3,7 +3,7 @@ import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { resolveAuth } from "../lib/auth.js";
 import { saveConfig } from "../lib/config.js";
-import { detectAgents, writeMcpConfigForAgent } from "../lib/agents.js";
+import { agentDisplayList, detectAgents, writeMcpConfigForAgent } from "../lib/agents.js";
 import { provisionKey } from "../lib/api-client.js";
 
 export interface WizardOptions {
@@ -25,7 +25,7 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
   if (agents.length > 0) {
     p.log.success(`Detected: ${agents.map((a) => accent().fg(a.displayName)).join(", ")}`);
   } else {
-    p.log.info("No IDE agents detected (Cursor, Claude Code, OpenCode).");
+    p.log.info(`No IDE agents detected (${agentDisplayList()}).`);
   }
 
   // -- Resolve or provision credentials -----------------------------------

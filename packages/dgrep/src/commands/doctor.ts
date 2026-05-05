@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { constants } from "node:fs";
 import { loadConfig, configPath } from "../lib/config.js";
 import { findProjectRoot, loadProjectConfig } from "../lib/project-config.js";
-import { detectAgents } from "../lib/agents.js";
+import { agentDisplayList, detectAgents } from "../lib/agents.js";
 import { searchDocs } from "../lib/api-client.js";
 
 export interface DoctorOptions {
@@ -135,7 +135,7 @@ export async function doctor(options: DoctorOptions = {}): Promise<void> {
     checks.push({
       name: "Agents",
       status: "warn",
-      message: "None detected (Cursor, Claude Code, OpenCode)",
+      message: `None detected (${agentDisplayList()})`,
     });
   }
 

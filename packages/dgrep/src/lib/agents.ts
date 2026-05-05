@@ -108,6 +108,13 @@ export function getAgentDefinition(name: string): AgentConfig | undefined {
   return (AGENTS as Record<string, AgentConfig | undefined>)[name];
 }
 
+// comma-joined display names — used in "No IDE agents detected (...)" messages
+export function agentDisplayList(): string {
+  return Object.values(AGENTS)
+    .map((a) => a.displayName)
+    .join(", ");
+}
+
 // -- Config writing -----------------------------------
 
 export async function writeMcpConfigForAgent(

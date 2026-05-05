@@ -2,17 +2,11 @@ import { accent } from "../lib/theme.js";
 import pc from "picocolors";
 import { loadConfig, configPath } from "../lib/config.js";
 import { findProjectRoot, loadProjectConfig } from "../lib/project-config.js";
-import { detectAgents } from "../lib/agents.js";
+import { AGENTS, detectAgents } from "../lib/agents.js";
+import type { AgentType } from "../lib/agents.js";
 import { detectProjectDeps } from "../lib/detect-deps.js";
 
 const VERSION = "0.1.0";
-
-const KNOWN_AGENTS = ["cursor", "claude-code", "opencode"] as const;
-const AGENT_DISPLAY: Record<string, string> = {
-  cursor: "Cursor",
-  "claude-code": "Claude Code",
-  opencode: "OpenCode",
-};
 
 export interface StatusOptions {
   json?: boolean;
@@ -57,7 +51,7 @@ export async function status(options: StatusOptions = {}): Promise<void> {
         },
         libraries: libs,
         librarySource: libs.length > 0 ? "project" : detected.deps.length > 0 ? "detected" : "none",
-        agents: KNOWN_AGENTS.map((name) => ({
+        agents: (Object.keys(AGENTS) as AgentType[]).map((name) => ({
           name,
           detected: detectedNames.has(name),
         })),
@@ -142,9 +136,9 @@ export async function status(options: StatusOptions = {}): Promise<void> {
   console.log("");
 
   // Agents
-  const agentParts = KNOWN_AGENTS.map((name) => {
-    const display = AGENT_DISPLAY[name];
-    return detectedNames.has(name) ? `${display} ${pc.green("✓")}` : `${display} ${pc.red("✗")}`;
+  const agentParts = Object.values(AGENTS).map((agent) => {
+    const mark = detectedNames.has(agent.name) ? pc.green("✓") : pc.red("✗");
+    return `${agent.displayName} ${mark}`;
   });
   console.log(`  ${label("Agents")}${agentParts.join("  ")}`);
 
