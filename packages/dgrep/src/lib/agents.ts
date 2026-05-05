@@ -20,7 +20,8 @@ export interface AgentConfig {
   displayName: string;
   probe: ProbeSpec;
   configPath: string; // relative to project root for project-dir agents
-  buildServerEntry: (apiKey: string) => Record<string, unknown>;
+  // url-only stanza; the IDE handles MCP-spec OAuth on first connect
+  buildServerEntry: () => Record<string, unknown>;
   mergeConfig: (
     existing: Record<string, unknown>,
     serverEntry: Record<string, unknown>
@@ -35,9 +36,8 @@ export const AGENTS: Record<AgentType, AgentConfig> = {
     displayName: "Cursor",
     probe: { kind: "project-dir", path: ".cursor" },
     configPath: ".cursor/mcp.json",
-    buildServerEntry: (apiKey) => ({
+    buildServerEntry: () => ({
       url: "https://mcp.docfork.com/mcp",
-      headers: { DOCFORK_API_KEY: apiKey },
     }),
     mergeConfig: (existing, entry) => {
       const mcpServers = (existing.mcpServers ?? {}) as Record<string, unknown>;
@@ -50,10 +50,9 @@ export const AGENTS: Record<AgentType, AgentConfig> = {
     displayName: "Claude Code",
     probe: { kind: "project-dir", path: ".claude" },
     configPath: ".mcp.json",
-    buildServerEntry: (apiKey) => ({
+    buildServerEntry: () => ({
       type: "http",
       url: "https://mcp.docfork.com/mcp",
-      headers: { DOCFORK_API_KEY: apiKey },
     }),
     mergeConfig: (existing, entry) => {
       const mcpServers = (existing.mcpServers ?? {}) as Record<string, unknown>;
@@ -66,10 +65,9 @@ export const AGENTS: Record<AgentType, AgentConfig> = {
     displayName: "OpenCode",
     probe: { kind: "project-dir", path: ".opencode" },
     configPath: "opencode.json",
-    buildServerEntry: (apiKey) => ({
+    buildServerEntry: () => ({
       type: "remote",
       url: "https://mcp.docfork.com/mcp",
-      headers: { DOCFORK_API_KEY: apiKey },
       enabled: true,
     }),
     mergeConfig: (existing, entry) => {
@@ -117,12 +115,9 @@ export function agentDisplayList(): string {
 
 // -- Config writing -----------------------------------
 
-export async function writeMcpConfigForAgent(
-  agent: DetectedAgent,
-  apiKey: string
-): Promise<void> {
+export async function writeMcpConfigForAgent(agent: DetectedAgent): Promise<void> {
   const def = AGENTS[agent.name];
-  const serverEntry = def.buildServerEntry(apiKey);
+  const serverEntry = def.buildServerEntry();
 
   // read existing config; back it up before modifying
   let existing: Record<string, unknown> = {};

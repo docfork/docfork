@@ -1,14 +1,10 @@
 import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
-import { resolveAuth } from "../lib/auth.js";
-import { saveConfig } from "../lib/config.js";
 import { agentDisplayList, detectAgents, writeMcpConfigForAgent } from "../lib/agents.js";
-import { provisionKey } from "../lib/api-client.js";
 
 export interface WizardOptions {
   yes?: boolean;
-  apiKey?: string;
   cwd?: string;
 }
 
@@ -28,35 +24,6 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
     p.log.info(`No IDE agents detected (${agentDisplayList()}).`);
   }
 
-  // -- Resolve or provision credentials -----------------------------------
-
-  const auth = await resolveAuth(options.apiKey);
-  let apiKey = auth.apiKey;
-
-  if (apiKey) {
-    p.log.success("API key found.");
-  } else {
-    p.log.step("Provisioning API key (no login required)...");
-
-    const provisionSpinner = p.spinner();
-    provisionSpinner.start("Provisioning...");
-
-    const result = await provisionKey();
-    apiKey = result.api_key;
-
-    if (!apiKey) {
-      provisionSpinner.stop("Failed.");
-      throw new Error("Provision response missing API key. Try again or run `dgrep login`.");
-    }
-
-    await saveConfig({
-      apiKey,
-      expiresAt: result.expires_at,
-    });
-
-    provisionSpinner.stop("API key provisioned.");
-  }
-
   // -- Write MCP configs -----------------------------------
 
   if (agents.length > 0) {
@@ -65,7 +32,7 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
         // Show manual CLI alternative for Claude Code
         if (agent.name === "claude-code") {
           p.log.info(
-            `Or run manually:\n  ${accent().fg(`claude mcp add --transport http docfork https://mcp.docfork.com/mcp --header "DOCFORK_API_KEY: ${apiKey}"`)}`
+            `Or run manually:\n  ${accent().fg("claude mcp add --transport http docfork https://mcp.docfork.com/mcp")}`
           );
         }
 
@@ -75,7 +42,7 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
         if (!writeConfig || p.isCancel(writeConfig)) continue;
       }
 
-      await writeMcpConfigForAgent(agent, apiKey!);
+      await writeMcpConfigForAgent(agent);
       p.log.success(`${agent.displayName}: ${pc.dim(agent.configPath)} updated`);
     }
   }
@@ -85,7 +52,7 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
   p.log.message("");
   p.log.step("Next steps:");
   if (agents.length > 0) {
-    p.log.info(`Your IDE agents can now use Docfork. Try searching in ${agents[0].displayName}!`);
+    p.log.info(`Sign in to Docfork in ${agents[0].displayName} on first use.`);
   }
   p.log.info(`Run ${accent().fg("dgrep init")} to track your project's libraries.`);
   p.log.info(`Run ${accent().fg("dgrep login")} to link your account (1K/mo free).`);

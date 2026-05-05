@@ -64,36 +64,38 @@ describe("detectAgents", () => {
 });
 
 describe("writeMcpConfigForAgent", () => {
-  it("writes Cursor config with url + headers under mcpServers", async () => {
+  it("writes Cursor config with url-only entry under mcpServers", async () => {
     await mkdir(join(tempDir, ".cursor"));
-    const agent = { name: "cursor", displayName: "Cursor", configPath: join(tempDir, ".cursor", "mcp.json") };
+    const agent = { name: "cursor" as const, displayName: "Cursor", configPath: join(tempDir, ".cursor", "mcp.json") };
 
-    await writeMcpConfigForAgent(agent, "docf_test123");
+    await writeMcpConfigForAgent(agent);
 
     const config = JSON.parse(await readFile(join(tempDir, ".cursor", "mcp.json"), "utf-8"));
     expect(config.mcpServers.docfork.url).toBe("https://mcp.docfork.com/mcp");
-    expect(config.mcpServers.docfork.headers.DOCFORK_API_KEY).toBe("docf_test123");
+    expect(config.mcpServers.docfork.headers).toBeUndefined();
   });
 
   it("writes Claude Code config with http type under mcpServers", async () => {
-    const agent = { name: "claude-code", displayName: "Claude Code", configPath: join(tempDir, ".mcp.json") };
+    const agent = { name: "claude-code" as const, displayName: "Claude Code", configPath: join(tempDir, ".mcp.json") };
 
-    await writeMcpConfigForAgent(agent, "docf_test123");
+    await writeMcpConfigForAgent(agent);
 
     const config = JSON.parse(await readFile(join(tempDir, ".mcp.json"), "utf-8"));
     expect(config.mcpServers.docfork.type).toBe("http");
     expect(config.mcpServers.docfork.url).toBe("https://mcp.docfork.com/mcp");
+    expect(config.mcpServers.docfork.headers).toBeUndefined();
   });
 
   it("writes OpenCode config with remote type under mcp key", async () => {
-    const agent = { name: "opencode", displayName: "OpenCode", configPath: join(tempDir, "opencode.json") };
+    const agent = { name: "opencode" as const, displayName: "OpenCode", configPath: join(tempDir, "opencode.json") };
 
-    await writeMcpConfigForAgent(agent, "docf_test123");
+    await writeMcpConfigForAgent(agent);
 
     const config = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
     expect(config.mcp.docfork.type).toBe("remote");
     expect(config.mcp.docfork.url).toBe("https://mcp.docfork.com/mcp");
     expect(config.mcp.docfork.enabled).toBe(true);
+    expect(config.mcp.docfork.headers).toBeUndefined();
   });
 
   it("merges with existing config without overwriting", async () => {
@@ -102,8 +104,8 @@ describe("writeMcpConfigForAgent", () => {
     const { writeFile: wf } = await import("node:fs/promises");
     await wf(configPath, JSON.stringify({ mcpServers: { "other-server": { url: "http://other" } } }));
 
-    const agent = { name: "cursor", displayName: "Cursor", configPath };
-    await writeMcpConfigForAgent(agent, "docf_test123");
+    const agent = { name: "cursor" as const, displayName: "Cursor", configPath };
+    await writeMcpConfigForAgent(agent);
 
     const config = JSON.parse(await readFile(configPath, "utf-8"));
     expect(config.mcpServers["other-server"]).toBeDefined();

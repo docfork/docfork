@@ -163,7 +163,6 @@ function buildCli() {
         await setup({
           agents: argv.agent as string[] | undefined,
           yes: argv.yes as boolean | undefined,
-          apiKey: argv["api-key"] as string | undefined,
         });
       }
     )
