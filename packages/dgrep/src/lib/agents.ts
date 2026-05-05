@@ -2,35 +2,38 @@ import { access, readFile, writeFile, copyFile, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { constants } from "node:fs";
 
+// -- Types -----------------------------------
+
+export type AgentType = "cursor" | "claude-code" | "opencode";
+
+// probe kinds expand as new agents land (user-dir, binary, etc.)
+export type ProbeSpec = { kind: "project-dir"; path: string };
+
 export interface DetectedAgent {
-  name: string;
+  name: AgentType;
   displayName: string;
   configPath: string;
 }
 
-export interface AgentDefinition {
-  name: string;
+export interface AgentConfig {
+  name: AgentType;
   displayName: string;
-  /** Directory to probe for detection (relative to project root) */
-  probeDir: string;
-  /** Config file path (relative to project root) */
-  configPath: string;
-  /** Build the MCP server entry for this agent */
+  probe: ProbeSpec;
+  configPath: string; // relative to project root for project-dir agents
   buildServerEntry: (apiKey: string) => Record<string, unknown>;
-  /** Read existing config, merge docfork server, return updated config */
   mergeConfig: (
     existing: Record<string, unknown>,
     serverEntry: Record<string, unknown>
   ) => Record<string, unknown>;
 }
 
-// -- Agent definitions -----------------------------------
+// -- Registry -----------------------------------
 
-const AGENTS: AgentDefinition[] = [
-  {
+export const AGENTS: Record<AgentType, AgentConfig> = {
+  cursor: {
     name: "cursor",
     displayName: "Cursor",
-    probeDir: ".cursor",
+    probe: { kind: "project-dir", path: ".cursor" },
     configPath: ".cursor/mcp.json",
     buildServerEntry: (apiKey) => ({
       url: "https://mcp.docfork.com/mcp",
@@ -42,10 +45,10 @@ const AGENTS: AgentDefinition[] = [
       return { ...existing, mcpServers };
     },
   },
-  {
+  "claude-code": {
     name: "claude-code",
     displayName: "Claude Code",
-    probeDir: ".claude",
+    probe: { kind: "project-dir", path: ".claude" },
     configPath: ".mcp.json",
     buildServerEntry: (apiKey) => ({
       type: "http",
@@ -58,10 +61,10 @@ const AGENTS: AgentDefinition[] = [
       return { ...existing, mcpServers };
     },
   },
-  {
+  opencode: {
     name: "opencode",
     displayName: "OpenCode",
-    probeDir: ".opencode",
+    probe: { kind: "project-dir", path: ".opencode" },
     configPath: "opencode.json",
     buildServerEntry: (apiKey) => ({
       type: "remote",
@@ -75,7 +78,7 @@ const AGENTS: AgentDefinition[] = [
       return { ...existing, mcp };
     },
   },
-];
+};
 
 // -- Detection -----------------------------------
 
@@ -83,49 +86,49 @@ export async function detectAgents(cwd?: string): Promise<DetectedAgent[]> {
   const dir = cwd ?? process.cwd();
   const detected: DetectedAgent[] = [];
 
-  const checks = AGENTS.map(async (agent) => {
-    try {
-      await access(join(dir, agent.probeDir), constants.F_OK);
-      detected.push({
-        name: agent.name,
-        displayName: agent.displayName,
-        configPath: join(dir, agent.configPath),
-      });
-    } catch {
-      // not found
-    }
-  });
+  await Promise.all(
+    Object.values(AGENTS).map(async (agent) => {
+      try {
+        await access(join(dir, agent.probe.path), constants.F_OK);
+        detected.push({
+          name: agent.name,
+          displayName: agent.displayName,
+          configPath: join(dir, agent.configPath),
+        });
+      } catch {
+        // probe target missing
+      }
+    })
+  );
 
-  await Promise.all(checks);
   return detected.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function getAgentDefinition(name: string): AgentDefinition | undefined {
-  return AGENTS.find((a) => a.name === name);
+export function getAgentDefinition(name: string): AgentConfig | undefined {
+  return (AGENTS as Record<string, AgentConfig | undefined>)[name];
 }
 
 // -- Config writing -----------------------------------
 
-export async function writeMcpConfigForAgent(agent: DetectedAgent, apiKey: string): Promise<void> {
-  const def = getAgentDefinition(agent.name);
-  if (!def) return;
-
+export async function writeMcpConfigForAgent(
+  agent: DetectedAgent,
+  apiKey: string
+): Promise<void> {
+  const def = AGENTS[agent.name];
   const serverEntry = def.buildServerEntry(apiKey);
 
-  // Read existing config
+  // read existing config; back it up before modifying
   let existing: Record<string, unknown> = {};
   try {
     const raw = await readFile(agent.configPath, "utf-8");
     existing = JSON.parse(raw) as Record<string, unknown>;
-    // Backup before modifying
     await copyFile(agent.configPath, agent.configPath + ".bak");
   } catch {
-    // File doesn't exist, start fresh
+    // file doesn't exist, start fresh
   }
 
   const updated = def.mergeConfig(existing, serverEntry);
 
-  // Ensure parent directory exists
   await mkdir(dirname(agent.configPath), { recursive: true });
   await writeFile(agent.configPath, JSON.stringify(updated, null, 2) + "\n");
 }
