@@ -58,6 +58,14 @@ describe("detectAgents", () => {
     expect(agents).toEqual([]);
   });
 
+  it("detects Windsurf when ~/.codeium/windsurf/ exists in home", async () => {
+    await mkdir(join(tempHome, ".codeium", "windsurf"), { recursive: true });
+    const agents = await detectAgents(tempDir, tempHome);
+    expect(agents.some((a) => a.name === "windsurf")).toBe(true);
+    const ws = agents.find((a) => a.name === "windsurf");
+    expect(ws?.configPath).toBe(join(tempHome, ".codeium", "windsurf", "mcp_config.json"));
+  });
+
   it("detects Codex when ~/.codex/ exists in home", async () => {
     await mkdir(join(tempHome, ".codex"));
     const agents = await detectAgents(tempDir, tempHome);
@@ -116,6 +124,21 @@ describe("writeMcpConfigForAgent", () => {
     expect(config.mcp.docfork.url).toBe("https://mcp.docfork.com/mcp");
     expect(config.mcp.docfork.enabled).toBe(true);
     expect(config.mcp.docfork.headers).toBeUndefined();
+  });
+
+  it("writes Windsurf config under mcpServers with serverUrl", async () => {
+    await mkdir(join(tempHome, ".codeium", "windsurf"), { recursive: true });
+    const agent = {
+      name: "windsurf" as const,
+      displayName: "Windsurf",
+      configPath: join(tempHome, ".codeium", "windsurf", "mcp_config.json"),
+    };
+
+    await writeMcpConfigForAgent(agent);
+
+    const config = JSON.parse(await readFile(agent.configPath, "utf-8"));
+    expect(config.mcpServers.docfork.serverUrl).toBe("https://mcp.docfork.com/mcp");
+    expect(config.mcpServers.docfork.headers).toBeUndefined();
   });
 
   it("writes VS Code config under top-level servers key", async () => {
@@ -190,6 +213,7 @@ describe("getAgentDefinition", () => {
     expect(getAgentDefinition("opencode")).toBeDefined();
     expect(getAgentDefinition("codex")).toBeDefined();
     expect(getAgentDefinition("vscode")).toBeDefined();
+    expect(getAgentDefinition("windsurf")).toBeDefined();
   });
 
   it("returns undefined for unknown agent", () => {

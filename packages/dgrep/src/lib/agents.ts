@@ -6,7 +6,13 @@ import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 
 // -- Types -----------------------------------
 
-export type AgentType = "cursor" | "claude-code" | "opencode" | "codex" | "vscode";
+export type AgentType =
+  | "cursor"
+  | "claude-code"
+  | "opencode"
+  | "codex"
+  | "vscode"
+  | "windsurf";
 
 // path is relative to project root for project-dir, relative to homedir for user-dir
 export type ProbeSpec =
@@ -116,6 +122,21 @@ export const AGENTS: Record<AgentType, AgentConfig> = {
       const servers = (existing.servers ?? {}) as Record<string, unknown>;
       servers["docfork"] = entry;
       return { ...existing, servers };
+    },
+  },
+  windsurf: {
+    name: "windsurf",
+    displayName: "Windsurf",
+    probe: { kind: "user-dir", path: ".codeium/windsurf" },
+    configPath: ".codeium/windsurf/mcp_config.json",
+    // windsurf uses serverUrl (not url); docs say it supports OAuth for each transport type
+    buildServerEntry: () => ({
+      serverUrl: "https://mcp.docfork.com/mcp",
+    }),
+    mergeConfig: (existing, entry) => {
+      const mcpServers = (existing.mcpServers ?? {}) as Record<string, unknown>;
+      mcpServers["docfork"] = entry;
+      return { ...existing, mcpServers };
     },
   },
 };
