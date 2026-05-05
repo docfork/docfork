@@ -18,7 +18,8 @@ export type AgentType =
   | "vscode"
   | "windsurf"
   | "amp"
-  | "factory";
+  | "factory"
+  | "zed";
 
 // path is relative to project root for project-dir, relative to homedir for user-dir;
 // binary kind probes for an executable on $PATH (cross-platform)
@@ -59,6 +60,13 @@ export interface AgentConfig {
   // optional one-line hint shown after a successful write
   postWriteNote?: string;
 }
+
+// -- Platform-specific paths -----------------------------------
+
+// zed stores its settings under different home-relative paths per OS;
+// resolved once at module load
+const ZED_DIR =
+  process.platform === "darwin" ? "Library/Application Support/Zed" : ".config/zed";
 
 // -- Registry -----------------------------------
 
@@ -192,6 +200,24 @@ export const AGENTS: Record<AgentType, AgentConfig> = {
       kind: "shell",
       bin: "droid",
       args: ["mcp", "add", "docfork", "https://mcp.docfork.com/mcp", "--type", "http"],
+    },
+  },
+  zed: {
+    name: "zed",
+    displayName: "Zed",
+    probe: { kind: "user-dir", path: ZED_DIR },
+    writer: {
+      kind: "file",
+      configPath: `${ZED_DIR}/settings.json`,
+      // url-only (no Authorization header) triggers Zed's standard MCP OAuth prompt per their docs
+      buildServerEntry: () => ({
+        url: "https://mcp.docfork.com/mcp",
+      }),
+      mergeConfig: (existing, entry) => {
+        const contextServers = (existing.context_servers ?? {}) as Record<string, unknown>;
+        contextServers["docfork"] = entry;
+        return { ...existing, context_servers: contextServers };
+      },
     },
   },
 };

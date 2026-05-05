@@ -80,6 +80,32 @@ describe("detectAgents", () => {
     expect(agents.some((a) => a.name === "amp")).toBe(false);
   });
 
+  it("detects Zed when its config dir exists in home", async () => {
+    const zedDir =
+      process.platform === "darwin" ? "Library/Application Support/Zed" : ".config/zed";
+    await mkdir(join(tempHome, zedDir), { recursive: true });
+    const agents = await detectAgents(tempDir, tempHome, tempBin);
+    expect(agents.some((a) => a.name === "zed")).toBe(true);
+    const zed = agents.find((a) => a.name === "zed");
+    expect(zed?.configPath).toBe(join(tempHome, zedDir, "settings.json"));
+  });
+
+  it("writes Zed config under context_servers", async () => {
+    const zedDir =
+      process.platform === "darwin" ? "Library/Application Support/Zed" : ".config/zed";
+    const configPath = join(tempHome, zedDir, "settings.json");
+
+    await writeMcpConfigForAgent({
+      name: "zed",
+      displayName: "Zed",
+      configPath,
+    });
+
+    const config = JSON.parse(await readFile(configPath, "utf-8"));
+    expect(config.context_servers.docfork.url).toBe("https://mcp.docfork.com/mcp");
+    expect(config.context_servers.docfork.headers).toBeUndefined();
+  });
+
   it("detects Factory when droid binary is on PATH", async () => {
     await installFakeBin("droid");
     const agents = await detectAgents(tempDir, tempHome, tempBin);
@@ -248,6 +274,7 @@ describe("getAgentDefinition", () => {
     expect(getAgentDefinition("windsurf")).toBeDefined();
     expect(getAgentDefinition("amp")).toBeDefined();
     expect(getAgentDefinition("factory")).toBeDefined();
+    expect(getAgentDefinition("zed")).toBeDefined();
   });
 
   it("returns undefined for unknown agent", () => {
