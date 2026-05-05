@@ -1,7 +1,7 @@
 import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
-import { agentDisplayList, detectAgents, writeMcpConfigForAgent } from "../lib/agents.js";
+import { AGENTS, agentDisplayList, detectAgents, writeMcpConfigForAgent } from "../lib/agents.js";
 
 export interface WizardOptions {
   yes?: boolean;
@@ -44,6 +44,9 @@ export async function wizard(options: WizardOptions = {}): Promise<void> {
 
       await writeMcpConfigForAgent(agent);
       p.log.success(`${agent.displayName}: ${pc.dim(agent.configPath)} updated`);
+
+      const note = AGENTS[agent.name].postWriteNote;
+      if (note) p.log.info(note);
     }
   }
 

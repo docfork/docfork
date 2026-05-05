@@ -1,13 +1,19 @@
 import { access, readFile, writeFile, copyFile, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { constants } from "node:fs";
+import { homedir } from "node:os";
+import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 
 // -- Types -----------------------------------
 
-export type AgentType = "cursor" | "claude-code" | "opencode";
+export type AgentType = "cursor" | "claude-code" | "opencode" | "codex";
 
-// probe kinds expand as new agents land (user-dir, binary, etc.)
-export type ProbeSpec = { kind: "project-dir"; path: string };
+// path is relative to project root for project-dir, relative to homedir for user-dir
+export type ProbeSpec =
+  | { kind: "project-dir"; path: string }
+  | { kind: "user-dir"; path: string };
+
+export type WriteFormat = "json" | "toml";
 
 export interface DetectedAgent {
   name: AgentType;
@@ -19,7 +25,12 @@ export interface AgentConfig {
   name: AgentType;
   displayName: string;
   probe: ProbeSpec;
-  configPath: string; // relative to project root for project-dir agents
+  // resolved against cwd (project-dir) or homedir (user-dir)
+  configPath: string;
+  // defaults to "json" when omitted
+  writeFormat?: WriteFormat;
+  // optional one-line hint shown after a successful write
+  postWriteNote?: string;
   // url-only stanza; the IDE handles MCP-spec OAuth on first connect
   buildServerEntry: () => Record<string, unknown>;
   mergeConfig: (
@@ -76,22 +87,44 @@ export const AGENTS: Record<AgentType, AgentConfig> = {
       return { ...existing, mcp };
     },
   },
+  codex: {
+    name: "codex",
+    displayName: "OpenAI Codex",
+    probe: { kind: "user-dir", path: ".codex" },
+    configPath: ".codex/config.toml",
+    writeFormat: "toml",
+    postWriteNote: "Run `codex mcp login docfork` to complete OAuth.",
+    buildServerEntry: () => ({
+      url: "https://mcp.docfork.com/mcp",
+    }),
+    mergeConfig: (existing, entry) => {
+      const mcpServers = (existing.mcp_servers ?? {}) as Record<string, unknown>;
+      mcpServers["docfork"] = entry;
+      return { ...existing, mcp_servers: mcpServers };
+    },
+  },
 };
 
 // -- Detection -----------------------------------
 
-export async function detectAgents(cwd?: string): Promise<DetectedAgent[]> {
+function probeRoot(probe: ProbeSpec, cwd: string, home: string): string {
+  return probe.kind === "project-dir" ? cwd : home;
+}
+
+export async function detectAgents(cwd?: string, home?: string): Promise<DetectedAgent[]> {
   const dir = cwd ?? process.cwd();
+  const userHome = home ?? homedir();
   const detected: DetectedAgent[] = [];
 
   await Promise.all(
     Object.values(AGENTS).map(async (agent) => {
+      const root = probeRoot(agent.probe, dir, userHome);
       try {
-        await access(join(dir, agent.probe.path), constants.F_OK);
+        await access(join(root, agent.probe.path), constants.F_OK);
         detected.push({
           name: agent.name,
           displayName: agent.displayName,
-          configPath: join(dir, agent.configPath),
+          configPath: join(root, agent.configPath),
         });
       } catch {
         // probe target missing
@@ -118,12 +151,16 @@ export function agentDisplayList(): string {
 export async function writeMcpConfigForAgent(agent: DetectedAgent): Promise<void> {
   const def = AGENTS[agent.name];
   const serverEntry = def.buildServerEntry();
+  const format = def.writeFormat ?? "json";
 
   // read existing config; back it up before modifying
   let existing: Record<string, unknown> = {};
   try {
     const raw = await readFile(agent.configPath, "utf-8");
-    existing = JSON.parse(raw) as Record<string, unknown>;
+    existing =
+      format === "toml"
+        ? (parseToml(raw) as Record<string, unknown>)
+        : (JSON.parse(raw) as Record<string, unknown>);
     await copyFile(agent.configPath, agent.configPath + ".bak");
   } catch {
     // file doesn't exist, start fresh
@@ -132,5 +169,7 @@ export async function writeMcpConfigForAgent(agent: DetectedAgent): Promise<void
   const updated = def.mergeConfig(existing, serverEntry);
 
   await mkdir(dirname(agent.configPath), { recursive: true });
-  await writeFile(agent.configPath, JSON.stringify(updated, null, 2) + "\n");
+  const serialized =
+    format === "toml" ? stringifyToml(updated) + "\n" : JSON.stringify(updated, null, 2) + "\n";
+  await writeFile(agent.configPath, serialized);
 }

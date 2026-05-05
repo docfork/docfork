@@ -1,7 +1,7 @@
 import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
-import { agentDisplayList, detectAgents, writeMcpConfigForAgent } from "../lib/agents.js";
+import { AGENTS, agentDisplayList, detectAgents, writeMcpConfigForAgent } from "../lib/agents.js";
 import type { DetectedAgent } from "../lib/agents.js";
 
 export interface SetupOptions {
@@ -57,6 +57,9 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 
     await writeMcpConfigForAgent(agent);
     p.log.success(`${agent.displayName}: ${pc.dim(agent.configPath)} updated`);
+
+    const note = AGENTS[agent.name].postWriteNote;
+    if (note) p.log.info(note);
   }
 
   p.outro("Done. Sign in to Docfork in your IDE on first use.");

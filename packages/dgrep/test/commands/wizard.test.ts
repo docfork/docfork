@@ -4,15 +4,20 @@ import { mkdtemp, rm, mkdir, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 
 let tempDir: string;
+let tempHome: string;
 
 beforeEach(async () => {
   tempDir = await mkdtemp(join(tmpdir(), "dgrep-wizard-test-"));
+  tempHome = await mkdtemp(join(tmpdir(), "dgrep-wizard-home-"));
+  // isolate user-dir probes (codex, etc.) from the host's real home
+  vi.stubEnv("HOME", tempHome);
 });
 
 afterEach(async () => {
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
   await rm(tempDir, { recursive: true, force: true });
+  await rm(tempHome, { recursive: true, force: true });
 });
 
 describe("wizard command", () => {
