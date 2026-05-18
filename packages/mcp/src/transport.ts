@@ -4,6 +4,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { DocforkAuthConfig, resolveAuthConfig, authContext } from "./config.js";
 import { isJwt, validateJwt, shouldTrustProxyHeaders } from "./lib/jwt.js";
+import { captureMcpInitialize } from "./lib/analytics.js";
 
 const maxRequestBodyBytes = 1_000_000;
 
@@ -285,11 +286,19 @@ export async function startHttpServer(
         }
 
         try {
-          // Only log client info on first connection (initialize request)
+          // log + capture client info on initialize handshake
           const isInitialize = requestBody?.method === "initialize";
           if (isInitialize) {
             const clientType = detectClientType(requestBody);
             console.log(`Client info: ${clientType}`);
+            captureMcpInitialize({
+              apiKey: authConfig.apiKey,
+              clientIp: authConfig.clientIp,
+              clientInfoHeader: authConfig.clientInfo,
+              rawClientInfo: requestBody?.params?.clientInfo,
+              protocolVersion: requestBody?.params?.protocolVersion,
+              transport: "http",
+            });
           }
 
           const serverFactory = standardServerFactory;
