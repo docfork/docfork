@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2](https://github.com/docfork/docfork/compare/docfork-v2.2.1...docfork-v2.2.2) (2026-05-18)
+
+
+### Features
+
+* **mcp:** capture mcp_initialize and mcp_tool_call server-side ([#142](https://github.com/docfork/docfork/issues/142)) ([d0eff21](https://github.com/docfork/docfork/commit/d0eff215f2f20b49dca9e01351317667f5544e0e))
+
 ## [2.2.1](https://github.com/docfork/docfork/compare/docfork-v2.2.0...docfork-v2.2.1) (2026-04-19)
 
 
