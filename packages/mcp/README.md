@@ -1208,6 +1208,28 @@ Free: 1,000 requests/month. Share API keys and Cabinets across your organization
 
 Docfork is retrieval, not synthesis — agents compose the answers.
 
+## Privacy & telemetry
+
+The MCP server sends anonymous usage events — client name, tool name, and whether each call succeeded — so we can see which clients connect and where the server fails.
+
+The MCP server **never** sends query text, library names, result content, URLs, raw API keys, or IP addresses. The plugin and CLI clients ship no telemetry of their own — the server is the only emitter, and its source is open for inspection.
+
+Opt out any of four ways:
+
+```bash
+DO_NOT_TRACK=1            # universal standard, any tool
+DOCFORK_TELEMETRY=0       # docfork-specific
+```
+
+Per-request opt-out for the hosted server (`mcp.docfork.com`):
+
+```
+DNT: 1
+X-Docfork-Telemetry: 0
+```
+
+Any one signal short-circuits before the network call. Details: [docfork.com/telemetry](https://docfork.com/telemetry).
+
 ## Community
 
 - **[Changelog](https://docfork.com/changelog)** – We ship constantly. Every release, documented.

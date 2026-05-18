@@ -78,10 +78,7 @@ function normalizeClientName(name?: string): string {
 }
 
 // best-effort client name from MCP clientInfo (initialize) or user-agent header
-function clientNameFrom(
-  rawClientInfo?: { name?: string },
-  clientInfoHeader?: string
-): string {
+function clientNameFrom(rawClientInfo?: { name?: string }, clientInfoHeader?: string): string {
   if (rawClientInfo?.name) return normalizeClientName(rawClientInfo.name);
   if (clientInfoHeader) {
     // user-agent shapes like "claude-code/1.2.3 (...)" — first token before "/"
