@@ -4,6 +4,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { DocforkAuthConfig, resolveAuthConfig, authContext } from "./config.js";
 import { isJwt, validateJwt, shouldTrustProxyHeaders } from "./lib/jwt.js";
+import { captureMcpInitialize } from "./lib/analytics.js";
 
 const maxRequestBodyBytes = 1_000_000;
 
@@ -217,12 +218,19 @@ export async function startHttpServer(
         try {
           const userAgent =
             typeof req.headers["user-agent"] === "string" ? req.headers["user-agent"] : undefined;
+          // DNT=1 or X-Docfork-Telemetry=0 opts the caller out of telemetry per-request
+          const dnt = req.headers["dnt"];
+          const dfTelemetry = req.headers["x-docfork-telemetry"];
+          const telemetryOptOut =
+            (typeof dnt === "string" && dnt === "1") ||
+            (typeof dfTelemetry === "string" && dfTelemetry === "0");
           authConfig = {
             ...extractAuthConfigFromRequest(req),
             clientIp: getClientIp(req),
             // forward client user-agent to api for attribution and debugging
             clientInfo: userAgent,
             transport: "http",
+            telemetryOptOut,
           };
         } catch (error: any) {
           sendJsonError(res, 400, -32602, error.message || "Invalid configuration");
@@ -285,11 +293,20 @@ export async function startHttpServer(
         }
 
         try {
-          // Only log client info on first connection (initialize request)
+          // log + capture client info on initialize handshake
           const isInitialize = requestBody?.method === "initialize";
           if (isInitialize) {
             const clientType = detectClientType(requestBody);
             console.log(`Client info: ${clientType}`);
+            captureMcpInitialize({
+              apiKey: authConfig.apiKey,
+              clientIp: authConfig.clientIp,
+              clientInfoHeader: authConfig.clientInfo,
+              rawClientInfo: requestBody?.params?.clientInfo,
+              protocolVersion: requestBody?.params?.protocolVersion,
+              transport: "http",
+              optOut: authConfig.telemetryOptOut,
+            });
           }
 
           const serverFactory = standardServerFactory;
