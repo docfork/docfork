@@ -84,6 +84,8 @@ export interface DocforkAuthConfig {
   clientIp?: string;
   clientInfo?: string;
   transport: "stdio" | "http";
+  // per-request telemetry opt-out, sourced from DNT/X-Docfork-Telemetry headers on http
+  telemetryOptOut?: boolean;
 }
 
 /**

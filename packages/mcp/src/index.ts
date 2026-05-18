@@ -20,20 +20,13 @@ import {
 import { startHttpServer, startStdioServer } from "./transport.js";
 import { captureMcpToolCall } from "./lib/analytics.js";
 
-// classify errors into stable buckets so the dashboard doesn't explode on stack traces
-function errorKindOf(e: unknown): string {
-  if (e instanceof Error) return e.name || "Error";
-  return typeof e;
-}
-
-// wrap a tool handler so duration + outcome ship to analytics regardless of transport
+// wrap a tool handler so every call ships to telemetry regardless of transport
 function instrumentTool<TArgs, TResult>(
   toolName: string,
   handler: (args: TArgs) => Promise<TResult>
 ): (args: TArgs) => Promise<TResult> {
   return async (args: TArgs) => {
     const auth = getAuthConfig();
-    const start = performance.now();
     try {
       const result = await handler(args);
       captureMcpToolCall({
@@ -41,9 +34,8 @@ function instrumentTool<TArgs, TResult>(
         clientIp: auth?.clientIp,
         clientInfoHeader: auth?.clientInfo,
         toolName,
-        durationMs: performance.now() - start,
-        ok: true,
         transport: auth?.transport === "http" ? "http" : "stdio",
+        optOut: auth?.telemetryOptOut,
       });
       return result;
     } catch (e) {
@@ -52,10 +44,8 @@ function instrumentTool<TArgs, TResult>(
         clientIp: auth?.clientIp,
         clientInfoHeader: auth?.clientInfo,
         toolName,
-        durationMs: performance.now() - start,
-        ok: false,
-        errorKind: errorKindOf(e),
         transport: auth?.transport === "http" ? "http" : "stdio",
+        optOut: auth?.telemetryOptOut,
       });
       throw e;
     }

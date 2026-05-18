@@ -1,11 +1,14 @@
 import { createHash } from "crypto";
-import { SERVER_VERSION } from "./constants.js";
+import { API_URL, SERVER_VERSION } from "./constants.js";
 
-// server-side mcp analytics. fire-and-forget posthog capture.
-// no-op unless POSTHOG_API_KEY is set (prod) or DOCFORK_ANALYTICS_DEBUG=1 (local test).
-// client repos (plugin, cli) ship no telemetry; the server is the only emitter.
+// server-side mcp telemetry. fire-and-forget POST to api.docfork.com/v1/telemetry.
+// public client repos (plugin, cli) ship no telemetry; the server is the only emitter.
+// the relay endpoint forwards to posthog server-side so this package contains no
+// posthog reference and no secrets.
 
-const DEFAULT_POSTHOG_HOST = "https://us.i.posthog.com";
+const TELEMETRY_URL = `${API_URL}/telemetry`;
+const TELEMETRY_TIMEOUT_MS = 2000;
+
 const ALLOWED_CLIENTS = new Set([
   "claude-code",
   "claude-desktop",
@@ -28,6 +31,7 @@ interface InitializeArgs {
   rawClientInfo?: { name?: string; version?: string };
   protocolVersion?: string;
   transport: "http" | "stdio";
+  optOut?: boolean;
 }
 
 interface ToolCallArgs {
@@ -35,29 +39,24 @@ interface ToolCallArgs {
   clientIp?: string;
   clientInfoHeader?: string;
   toolName: string;
-  durationMs: number;
-  ok: boolean;
-  errorKind?: string;
   transport: "http" | "stdio";
+  optOut?: boolean;
 }
 
 function isDebug(): boolean {
   return process.env.DOCFORK_ANALYTICS_DEBUG === "1";
 }
 
-function projectKey(): string | undefined {
-  return process.env.POSTHOG_API_KEY || process.env.POSTHOG_PROJECT_API_KEY;
-}
-
-function host(): string {
-  return process.env.POSTHOG_HOST || DEFAULT_POSTHOG_HOST;
-}
-
-function enabled(): boolean {
-  return isDebug() || Boolean(projectKey());
+// universal "do not track" standard (consoledonottrack.com) + a tool-specific
+// override so users can disable docfork without touching unrelated tools.
+function envOptOut(): boolean {
+  if (process.env.DO_NOT_TRACK && process.env.DO_NOT_TRACK !== "0") return true;
+  if (process.env.DOCFORK_TELEMETRY === "0") return true;
+  return false;
 }
 
 // stable, non-reversible id derived from api key. falls back to ip-derived anon id.
+// hashed prefix shape (`u_*` / `anon_*`) is what the relay accepts for non-uuid clients.
 function distinctId(apiKey?: string, clientIp?: string): string {
   if (apiKey) {
     return "u_" + createHash("sha256").update(apiKey).digest("hex").slice(0, 16);
@@ -68,7 +67,7 @@ function distinctId(apiKey?: string, clientIp?: string): string {
   return "anon_unknown";
 }
 
-// allowlist-fold cardinality so the dashboard stays readable
+// allowlist-fold cardinality so dashboards stay readable
 function normalizeClientName(name?: string): string {
   if (!name) return "unknown";
   const lower = name.toLowerCase().trim();
@@ -82,60 +81,51 @@ function normalizeClientName(name?: string): string {
 function clientNameFrom(
   rawClientInfo?: { name?: string },
   clientInfoHeader?: string
-): { name: string; raw?: string } {
-  if (rawClientInfo?.name) {
-    return { name: normalizeClientName(rawClientInfo.name), raw: rawClientInfo.name };
-  }
+): string {
+  if (rawClientInfo?.name) return normalizeClientName(rawClientInfo.name);
   if (clientInfoHeader) {
     // user-agent shapes like "claude-code/1.2.3 (...)" — first token before "/"
     const token = clientInfoHeader.split(/[/\s]/)[0];
-    return { name: normalizeClientName(token), raw: clientInfoHeader };
+    return normalizeClientName(token);
   }
-  return { name: "unknown" };
+  return "unknown";
 }
 
-async function send(event: string, distinct_id: string, properties: Record<string, unknown>) {
-  if (!enabled()) return;
+async function send(
+  event: string,
+  distinct_id: string,
+  properties: Record<string, unknown>
+): Promise<void> {
+  if (envOptOut()) return;
 
-  const payload = {
-    api_key: projectKey() || "debug",
-    event,
-    distinct_id,
-    properties: {
-      ...properties,
-      $lib: "docfork-mcp-server",
-      $lib_version: SERVER_VERSION,
-    },
-    timestamp: new Date().toISOString(),
-  };
+  const payload = { event, distinct_id, properties };
 
   if (isDebug()) {
     process.stderr.write(`[analytics] ${event} ${JSON.stringify(payload)}\n`);
+    return; // debug mode skips network so local runs don't spam prod telemetry
   }
 
-  if (!projectKey()) return;
-
-  // fire-and-forget. swallow all errors so analytics never breaks a tool call.
+  // fire-and-forget. swallow all errors so telemetry never breaks a tool call.
   try {
-    await fetch(`${host()}/capture/`, {
+    await fetch(TELEMETRY_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Docfork-Client": `docfork-mcp/${SERVER_VERSION}`,
+      },
       body: JSON.stringify(payload),
-      // short timeout so a slow posthog never tail-latencies a tool response
-      signal: AbortSignal.timeout(2000),
+      signal: AbortSignal.timeout(TELEMETRY_TIMEOUT_MS),
     });
   } catch {
-    // intentional: never let analytics raise
+    // intentional: never let telemetry raise
   }
 }
 
 export function captureMcpInitialize(args: InitializeArgs): void {
-  if (!enabled()) return;
+  if (args.optOut || envOptOut()) return;
 
-  const { name, raw } = clientNameFrom(args.rawClientInfo, args.clientInfoHeader);
   const properties = {
-    client_name: name,
-    client_name_raw: raw,
+    client_name: clientNameFrom(args.rawClientInfo, args.clientInfoHeader),
     client_version: args.rawClientInfo?.version,
     protocol_version: args.protocolVersion,
     transport: args.transport,
@@ -143,24 +133,19 @@ export function captureMcpInitialize(args: InitializeArgs): void {
     has_api_key: Boolean(args.apiKey),
   };
 
-  // not awaited: fire-and-forget
   void send("mcp_initialize", distinctId(args.apiKey, args.clientIp), properties);
 }
 
 export function captureMcpToolCall(args: ToolCallArgs): void {
-  if (!enabled()) return;
+  if (args.optOut || envOptOut()) return;
 
-  const { name } = clientNameFrom(undefined, args.clientInfoHeader);
+  // shape matches /v1/telemetry allowlist for mcp_tool_called: only
+  // tool_name, upstream_client, and org_id are forwarded. org_id is
+  // resolved by the relay from the calling api key, not by this package.
   const properties = {
     tool_name: args.toolName,
-    duration_ms: Math.round(args.durationMs),
-    ok: args.ok,
-    error_kind: args.errorKind,
-    client_name: name,
-    transport: args.transport,
-    server_version: SERVER_VERSION,
-    has_api_key: Boolean(args.apiKey),
+    upstream_client: clientNameFrom(undefined, args.clientInfoHeader),
   };
 
-  void send("mcp_tool_call", distinctId(args.apiKey, args.clientIp), properties);
+  void send("mcp_tool_called", distinctId(args.apiKey, args.clientIp), properties);
 }
