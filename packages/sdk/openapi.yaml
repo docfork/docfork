@@ -1,0 +1,674 @@
+openapi: 3.0.3
+
+info:
+  title: Docfork API
+  version: "1.0.0"
+  description: |
+    Public Docfork API surface exposed by the `docfork` TypeScript SDK (v0.0.1).
+
+    Read-only: search documentation, read individual sections, browse the public library catalog.
+
+    See the full API at https://docfork.com/docs/api.
+  contact:
+    name: Docfork Support
+    url: https://docfork.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.docfork.com
+    description: Production
+
+security:
+  - bearerAuth: []
+  - {}
+
+tags:
+  - name: Search
+    description: Cross-library documentation search and single-section retrieval.
+  - name: Libraries
+    description: Public catalog browse, get, version listing.
+
+paths:
+  /v1/search:
+    post:
+      tags: [Search]
+      operationId: searchDocumentation
+      summary: Search documentation across multiple libraries
+      description: |
+        Search one or more libraries. Returns scored section results.
+        Accepts library identifiers (e.g. `vercel/next.js`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+      responses:
+        "200":
+          description: Search results
+          headers:
+            Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /v1/read:
+    get:
+      tags: [Search]
+      operationId: readDocument
+      summary: Read full content of a documentation section by URL
+      description: |
+        Returns the content for a single documentation URL. Rate-limited 30/min per key.
+      parameters:
+        - name: url
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+          description: Documentation URL from a search result.
+        - name: tokens
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Token budget for the response (default 20,000, max 1,000,000).
+        - name: cabinet
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Optional cabinet slug to scope the read (requires API key).
+      responses:
+        "200":
+          description: Section content
+          headers:
+            Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /v1/libraries/search:
+    get:
+      tags: [Libraries]
+      operationId: searchPublicLibraries
+      summary: Search public library catalog
+      description: |
+        Search the public library catalog. Returns ranked libraries matching the query.
+        Use the returned `identifier` (e.g. `vercel/next.js`) for downstream `libraries.retrieve`,
+        `libraries.versions`, and `search`.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+          description: Search query (min 2 characters).
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Maximum number of results to return (default 20, max 100).
+      responses:
+        "200":
+          description: Ranked library matches
+          headers:
+            Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /v1/libraries/{identifier}:
+    get:
+      tags: [Libraries]
+      operationId: getPublicLibrary
+      summary: Get a single public library by identifier
+      description: |
+        Bearer API key required. Returns 401 for anonymous callers.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: identifier
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Library identifier (e.g. `vercel/next.js`).
+      responses:
+        "200":
+          description: Library metadata
+          headers:
+            Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Library"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /v1/libraries/{identifier}/versions:
+    get:
+      tags: [Libraries]
+      operationId: listPublicLibraryVersions
+      summary: List versions for a public library
+      description: |
+        Bearer API key required. Returns 401 for anonymous callers.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: identifier
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Library identifier (e.g. `vercel/next.js`).
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Items per page (default 50, max 100).
+        - name: start_cursor
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Pagination cursor from a previous `next_cursor` value.
+      responses:
+        "200":
+          description: Versions list
+          headers:
+            Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryVersionList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        Bearer authentication with a `docf_*` API key. Get one at https://app.docfork.com.
+
+        Anonymous access is allowed on the discovery surface (search, read,
+        libraries.search); other endpoints return 401 without a bearer.
+
+  schemas:
+    # -- Shared --------------------------------------------------------------
+    Source:
+      type: object
+      required: [type, url]
+      properties:
+        type:
+          type: string
+          description: |
+            Where the library's documentation comes from. Known values today:
+            `github`, `website`. New values may appear without notice; treat as a
+            documented open enum, not a sealed set.
+          example: github
+        url:
+          type: string
+          format: uri
+          example: https://github.com/vercel/next.js
+
+    Library:
+      type: object
+      required:
+        - object
+        - id
+        - identifier
+        - listing
+        - source
+        - url
+        - title
+        - description
+        - status
+        - last_indexed_at
+        - created_at
+        - updated_at
+      properties:
+        object:
+          type: string
+          enum: [library]
+        id:
+          type: string
+          format: uuid
+          description: Stable library identifier.
+        identifier:
+          type: string
+          description: |
+            Canonical user-facing identifier (e.g. `vercel/next.js`). Use this for
+            `libraries.get`, `libraries.versions`, and as a `libraries` array entry on `search`.
+          example: vercel/next.js
+        listing:
+          type: string
+          enum: [catalog, private]
+          description: |
+            `catalog` for public catalog libraries; `private` for org-scoped private libraries.
+        source:
+          $ref: "#/components/schemas/Source"
+        url:
+          type: string
+          format: uri
+          description: Same value as `source.url`. Kept top-level for ergonomic single-URL access.
+        title:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          description: Indexing status. Documented values include `ready`, `indexing`, `pending`, `failed`.
+          example: ready
+        last_indexed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    LibraryList:
+      type: object
+      description: |
+        Paginated list of `Library` objects. Standard list envelope used across the API:
+        consumers iterate `data[]` and use `next_cursor` (passed as `start_cursor` on the
+        next request) until `has_more` is `false`.
+      required: [object, data, next_cursor, has_more]
+      properties:
+        object:
+          type: string
+          enum: [list]
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Library"
+        next_cursor:
+          type: string
+          nullable: true
+        has_more:
+          type: boolean
+
+    LibraryVersion:
+      type: object
+      description: A single version of a `Library`.
+      required: [object, id, library_id, created_at, updated_at]
+      properties:
+        object:
+          type: string
+          enum: [library_version]
+        id:
+          type: string
+          format: uuid
+        library_id:
+          type: string
+          format: uuid
+        branch:
+          type: string
+          nullable: true
+          description: Git branch name. Null for non-Git sources or when the version is tag-only.
+        tag:
+          type: string
+          nullable: true
+          description: |
+            Released git tag (e.g. `v15.1.8`) when present. The newest untagged version is
+            returned as `"latest"` to give callers a stable handle.
+        commit_hash:
+          type: string
+          nullable: true
+          description: Git commit SHA. Null for non-Git sources.
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    LibraryVersionList:
+      type: object
+      description: |
+        Paginated list of `LibraryVersion` objects for a single library. Standard list
+        envelope. Versions are sorted newest first.
+      required: [object, data, next_cursor, has_more]
+      properties:
+        object:
+          type: string
+          enum: [list]
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/LibraryVersion"
+        next_cursor:
+          type: string
+          nullable: true
+        has_more:
+          type: boolean
+
+    # -- Search --------------------------------------------------------------
+    SearchRequest:
+      type: object
+      required: [query, libraries]
+      properties:
+        query:
+          type: string
+          minLength: 3
+          maxLength: 2000
+          description: |
+            Natural-language search query. Capped at 2000 characters: longer queries don't
+            improve retrieval quality (embedding models truncate well before that) and
+            indicate a different problem (consider calling `read` to fetch a section and
+            prompting your own LLM with the result).
+          example: middleware authentication
+        libraries:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            type: string
+          description: One or more library identifiers (`owner/repo` form).
+          example: [vercel/next.js, auth0/nextjs-auth0]
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+          description: Maximum number of section results to return (default 10, max 100).
+        include_content:
+          type: boolean
+          default: true
+          description: |
+            When `true` (default), returns each matched section's full content. When
+            `false`, returns titles + URLs only (preview mode); follow up with `read(url)`
+            for the body.
+
+    SearchSection:
+      type: object
+      required:
+        - id
+        - score
+        - title
+        - content
+        - path
+        - url
+        - start_line
+        - end_line
+        - parent_headers
+        - library_identifier
+      properties:
+        id:
+          type: string
+          description: Opaque section identifier. Useful for dedup across requests.
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Relevance score in [0, 1]. Higher is more relevant.
+        title:
+          type: string
+        content:
+          type: string
+          description: |
+            Section body. Empty string when `include_content` is `false` in the request.
+        path:
+          type: string
+          description: |
+            Source-relative file path (e.g. `docs/01-app/03-middleware.mdx`). Informational
+            for citation; use `url` as the addressable handle to pass to `read`.
+        url:
+          type: string
+          format: uri
+          description: Addressable URL for this section. Pass to `read(url)` to fetch full content.
+        start_line:
+          type: integer
+        end_line:
+          type: integer
+        parent_headers:
+          type: array
+          items:
+            type: string
+          description: |
+            Heading-ancestry breadcrumb (e.g. `["Routing", "Middleware", "Authentication"]`).
+            Useful for citation context without a second `read` call to reconstruct.
+        library_identifier:
+          type: string
+          description: |
+            Identifier of the library that produced this section (e.g. `vercel/next.js`).
+            Cite this when surfacing results to users; matches the value in your
+            `libraries` request array.
+
+    SearchMeta:
+      type: object
+      required: [query, libraries, usage, performance]
+      properties:
+        query:
+          type: string
+          description: Echo of the input query.
+        libraries:
+          type: object
+          required: [resolved, unresolved]
+          description: |
+            Identifier-level audit trail. `resolved` lists which of the requested
+            `libraries[]` matched real catalog entries; `unresolved` lists the ones
+            we couldn't match. Batch search succeeds partially: results come from
+            `resolved`; consumers can surface "couldn't find: X" UX from `unresolved`.
+          properties:
+            resolved:
+              type: array
+              items:
+                type: string
+            unresolved:
+              type: array
+              items:
+                type: string
+        usage:
+          type: object
+          required: [chunks_searched, chunks_returned, embedding_tokens]
+          description: |
+            Billing-grade observability. `chunks_searched` is total candidates considered;
+            `chunks_returned` is what made it through `limit`; `embedding_tokens` is the
+            query embedding cost in tokens.
+          properties:
+            chunks_searched:
+              type: integer
+            chunks_returned:
+              type: integer
+            embedding_tokens:
+              type: integer
+        performance:
+          type: object
+          required: [latency_ms]
+          description: Server-side wall-clock timing. Excludes network round-trip.
+          properties:
+            latency_ms:
+              type: number
+
+    SearchResponse:
+      type: object
+      required: [object, results, meta]
+      properties:
+        object:
+          type: string
+          enum: [search_result]
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchSection"
+        meta:
+          $ref: "#/components/schemas/SearchMeta"
+
+    # -- Read ----------------------------------------------------------------
+    ReadResponse:
+      type: object
+      required: [text, tokens, library_identifier, version_info, url, source]
+      properties:
+        text:
+          type: string
+        tokens:
+          type: integer
+          description: Estimated token count (characters / 3.75).
+        library_identifier:
+          type: string
+        version_info:
+          type: string
+        url:
+          type: string
+          format: uri
+        source:
+          type: string
+          enum: [indexed, live]
+          description: Whether content came from the index or a live scrape fallback.
+        metadata:
+          type: object
+          additionalProperties: true
+
+    # -- Errors --------------------------------------------------------------
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [type, code, message]
+          properties:
+            type:
+              type: string
+              description: |
+                High-level error category. Known values: `invalid_request_error`,
+                `authentication_error`, `permission_error`, `rate_limit_error`, `not_found_error`,
+                `api_error`.
+            code:
+              type: string
+              description: Machine-stable identifier for the specific failure.
+            message:
+              type: string
+              description: Human-readable explanation. May change between versions.
+            param:
+              type: string
+              description: Name of the field that caused validation failure (when applicable).
+            request_id:
+              type: string
+              description: Typed request id (`req_*`). Always present, always logged.
+
+  headers:
+    RequestId:
+      description: |
+        Unique identifier for this request. Always present on every response (success or
+        error). Cite this value in support tickets; we log it on every request and can
+        trace any call by it. SDK consumers should expose this via `response.requestId`.
+      schema:
+        type: string
+        example: 7a3f8b2c-1e4d-4b9e-9c3a-5d8e9f0a1b2c
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      headers:
+        Request-Id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Missing or invalid bearer token
+      headers:
+        Request-Id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found
+      headers:
+        Request-Id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unprocessable:
+      description: Content could not be retrieved
+      headers:
+        Request-Id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        Request-Id:
+          $ref: "#/components/headers/RequestId"
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds until the rate limit resets.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InternalError:
+      description: Internal server error
+      headers:
+        Request-Id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
