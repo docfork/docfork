@@ -1,6 +1,6 @@
 {
   "name": "@docfork/sdk",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Official TypeScript SDK for the Docfork API. Index, search, and read documentation for AI coding agents.",
   "type": "module",
   "license": "MIT",
