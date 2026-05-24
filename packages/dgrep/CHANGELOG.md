@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.1](https://github.com/docfork/docfork/compare/dgrep-v0.2.1...dgrep-v0.0.1) (2026-05-24)
+
+
+### Miscellaneous Chores
+
+* **sdk:** force first release to 0.0.1 ([#146](https://github.com/docfork/docfork/issues/146)) ([c8626af](https://github.com/docfork/docfork/commit/c8626afa5a0402f5723a68942c2cfc373094567c))
+
 ## [0.2.1](https://github.com/docfork/docfork/compare/dgrep-v0.2.0...dgrep-v0.2.1) (2026-04-19)
 
 
