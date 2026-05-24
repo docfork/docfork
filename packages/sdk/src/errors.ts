@@ -1,4 +1,4 @@
-// stripe-envelope { error: { type, code, message, request_id } } → typed subclass per status family.
+// error envelope { error: { type, code, message, request_id } } → typed subclass per status family.
 
 export interface DocforkErrorBody {
   type: string;

@@ -37,8 +37,8 @@ paths:
       operationId: searchDocumentation
       summary: Search documentation across multiple libraries
       description: |
-        Batch search over one or more libraries. Returns merged, scored section results.
-        Accepts explicit library identifiers (e.g. `vercel/next.js`).
+        Search one or more libraries. Returns scored section results.
+        Accepts library identifiers (e.g. `vercel/next.js`).
       requestBody:
         required: true
         content:
@@ -68,8 +68,7 @@ paths:
       operationId: readDocument
       summary: Read full content of a documentation section by URL
       description: |
-        Returns the indexed content for a single documentation URL.
-        Falls back to live scrape for non-indexed URLs (rate-limited 30/min per key or IP).
+        Returns the content for a single documentation URL. Rate-limited 30/min per key.
       parameters:
         - name: url
           in: query
@@ -83,7 +82,7 @@ paths:
           required: false
           schema:
             type: integer
-          description: Token budget for prefix reads (default 20,000, max 1,000,000).
+          description: Token budget for the response (default 20,000, max 1,000,000).
         - name: cabinet
           in: query
           required: false
@@ -117,7 +116,7 @@ paths:
       operationId: searchPublicLibraries
       summary: Search public library catalog
       description: |
-        Typo-tolerant FTS over the public catalog. Returns ranked libraries by identifier match.
+        Search the public library catalog. Returns ranked libraries matching the query.
         Use the returned `identifier` (e.g. `vercel/next.js`) for downstream `libraries.retrieve`,
         `libraries.versions`, and `search`.
       parameters:
@@ -136,11 +135,7 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
-          description: |
-            Maximum number of results to return (default 20, max 100). Top-K only;
-            `libraries.search` is single-shot ranking, not cursor-paginated. The response
-            envelope includes `next_cursor` + `has_more` for cross-endpoint shape
-            consistency, but they are always `null` / `false` on this endpoint.
+          description: Maximum number of results to return (default 20, max 100).
       responses:
         "200":
           description: Ranked library matches
@@ -162,8 +157,7 @@ paths:
       operationId: getPublicLibrary
       summary: Get a single public library by identifier
       description: |
-        Bearer required. Accepts either a `docf_*` API key or a WorkOS access
-        token (dashboard sessions). Returns 401 for anonymous callers.
+        Bearer API key required. Returns 401 for anonymous callers.
       security:
         - bearerAuth: []
       parameters:
@@ -196,8 +190,7 @@ paths:
       operationId: listPublicLibraryVersions
       summary: List versions for a public library
       description: |
-        Bearer required. Accepts either a `docf_*` API key or a WorkOS access
-        token (dashboard sessions). Returns 401 for anonymous callers.
+        Bearer API key required. Returns 401 for anonymous callers.
       security:
         - bearerAuth: []
       parameters:
@@ -245,16 +238,10 @@ components:
       type: http
       scheme: bearer
       description: |
-        Bearer authentication. Two token formats are accepted on /v1/*:
+        Bearer authentication with a `docf_*` API key. Get one at https://app.docfork.com.
 
-        - **`docf_*` API key** — for SDK, MCP, and CLI clients. Get one at
-          https://docfork.com/dashboard. Eligible for monthly quota meter.
-        - **WorkOS access token** — for dashboard sessions. JWKS-verified per
-          request. Does not burn customer quota.
-
-        The server sniffs the token format by prefix. Anonymous access is
-        allowed on the discovery surface (search, read, libraries.search);
-        other endpoints return 401 without a bearer.
+        Anonymous access is allowed on the discovery surface (search, read,
+        libraries.search); other endpoints return 401 without a bearer.
 
   schemas:
     # -- Shared --------------------------------------------------------------
@@ -296,7 +283,7 @@ components:
         id:
           type: string
           format: uuid
-          description: Stable library identifier. UUID v7 in v1; typed-id format lands in v2.
+          description: Stable library identifier.
         identifier:
           type: string
           description: |
@@ -358,12 +345,7 @@ components:
 
     LibraryVersion:
       type: object
-      description: |
-        A single version of a `Library`. Git-source-specific today: `branch`, `tag`, and
-        `commit_hash` describe a git reference. Non-Git source types (website, llms.txt,
-        openapi, confluence) will ship with a `version_kind` discriminator and additional
-        fields (e.g. `snapshot_at`, `crawled_at`) non-breakingly when they land. Treat
-        the current shape as Git-specific; check `version_kind` once it appears.
+      description: A single version of a `Library`.
       required: [object, id, library_id, created_at, updated_at]
       properties:
         object:
@@ -444,10 +426,7 @@ components:
           minimum: 1
           maximum: 100
           default: 10
-          description: |
-            Maximum number of section results to return (top-K cap, not page size). Search
-            is single-shot and reranked; raise this if you need more results rather than
-            paginating.
+          description: Maximum number of section results to return (default 10, max 100).
         include_content:
           type: boolean
           default: true
@@ -472,14 +451,12 @@ components:
       properties:
         id:
           type: string
-          description: Opaque chunk identifier in the vector index. Useful for dedup across requests.
+          description: Opaque section identifier. Useful for dedup across requests.
         score:
           type: number
           minimum: 0
           maximum: 1
-          description: |
-            Relevance score in [0, 1]. Cross-encoder rerank scores when reranking ran
-            (always-on server side today); raw cosine similarity otherwise.
+          description: Relevance score in [0, 1]. Higher is more relevant.
         title:
           type: string
         content:
@@ -665,7 +642,7 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
     Unprocessable:
-      description: Content not indexed and live scrape failed
+      description: Content could not be retrieved
       headers:
         Request-Id:
           $ref: "#/components/headers/RequestId"

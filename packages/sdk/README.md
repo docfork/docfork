@@ -33,7 +33,7 @@ const doc = await docfork.read(results[0].url);
 console.log(doc.text);
 ```
 
-An API key is required. Get one at [docfork.com/dashboard](https://docfork.com/dashboard).
+An API key is required. Get one at [app.docfork.com](https://app.docfork.com).
 
 ## Why the 3-step quickstart
 
@@ -51,7 +51,7 @@ An API key is required. Get one at [docfork.com/dashboard](https://docfork.com/d
 
 ### `docfork.search(query, opts)` → `SearchResponse`
 
-Search documentation across one or more libraries. Top-K only; single-shot rerank, not paginated.
+Search documentation across one or more libraries.
 
 ```ts
 await docfork.search("middleware authentication", {
@@ -65,18 +65,18 @@ When `include_content: false`, each section's `content` is an empty string — p
 
 ### `docfork.read(url, opts?)` → `ReadResponse`
 
-Read a single documentation section by URL. Falls back to live scrape for non-indexed URLs (rate-limited 30/min).
+Read a single documentation section by URL. Rate-limited 30/min per key.
 
 ```ts
 await docfork.read("https://nextjs.org/docs/middleware", {
-  tokens: 20_000,            // optional, leading-token budget (default 20,000, max 1,000,000)
+  tokens: 20_000,             // optional, token budget for the response (default 20,000, max 1,000,000)
   cabinet: "my-cabinet-slug", // optional, scopes the read to a cabinet
 });
 ```
 
 ### `docfork.libraries.search(q, opts?)` → `Library[]`
 
-Typo-tolerant search over the public catalog. Returns ranked libraries directly (no envelope). Top-K only.
+Search the public library catalog. Returns ranked libraries directly (no envelope).
 
 ```ts
 await docfork.libraries.search("react", { limit: 20 }); // optional, default 20, max 100
@@ -109,13 +109,13 @@ console.log(page.request_id);
 const next = await page.next();
 ```
 
-`LibraryVersion.tag === "latest"` is a sentinel for the newest untagged version. `branch` and `commit_hash` are git-source-specific; non-git sources (website, llms.txt, openapi) will ship with a `version_kind` discriminator non-breakingly when they land.
+`LibraryVersion.tag === "latest"` is a sentinel for the newest untagged version.
 
 ## Errors
 
 Every failure throws a typed subclass of `DocforkError`. Branch on `instanceof` or on the discriminator fields (`err.type`, `err.status`).
 
-| Status        | Class                  | Stripe-envelope `type`        |
+| Status        | Class                  | Envelope `type`               |
 | ------------- | ---------------------- | ----------------------------- |
 | 401           | `AuthenticationError`  | `authentication_error`        |
 | 400           | `InvalidRequestError`  | `invalid_request_error`       |
@@ -146,7 +146,7 @@ Every error carries `requestId` (from the `Request-Id` response header) — cite
 
 - Docs: <https://docfork.com/docs/sdk>
 - API reference: <https://docfork.com/docs/api>
-- Dashboard: <https://docfork.com/dashboard>
+- Dashboard: <https://app.docfork.com>
 - Source: <https://github.com/docfork/docfork/tree/main/packages/sdk>
 - Issues: <https://github.com/docfork/docfork/issues>
 

@@ -1,4 +1,4 @@
-// composes generated flat functions into a class with Exa-style positional-primary signatures.
+// composes generated flat functions into a class with positional-primary signatures.
 
 import { createClient, type Client } from "./gen/client";
 import {
@@ -43,7 +43,7 @@ export class Docfork {
       throw new Error(
         "Missing API key.\n" +
           "Pass `new Docfork('docf_...')` or set DOCFORK_API_KEY. " +
-          "Get a key at https://docfork.com/dashboard.",
+          "Get a key at https://app.docfork.com.",
       );
     }
 
@@ -51,7 +51,7 @@ export class Docfork {
       baseUrl: opts.baseUrl ?? DEFAULT_BASE_URL,
       fetch: opts.fetch,
       throwOnError: true, // surface failures as typed DocforkError subclasses
-      auth: () => apiKey, // dual-protocol bearer (docf_* or workos jwt)
+      auth: () => apiKey,
     });
     this.#client.interceptors.error.use(wrapClientError);
     this.libraries = new LibrariesResource(this.#client);
