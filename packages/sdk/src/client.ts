@@ -29,7 +29,10 @@ export class Docfork {
   readonly #client: Client;
   readonly libraries: LibrariesResource;
 
-  constructor(apiKeyOrOptions?: string | DocforkOptions, maybeOptions?: DocforkOptions) {
+  constructor(
+    apiKeyOrOptions?: string | DocforkOptions,
+    maybeOptions?: DocforkOptions,
+  ) {
     const opts: DocforkOptions =
       typeof apiKeyOrOptions === "object" && apiKeyOrOptions !== null
         ? apiKeyOrOptions

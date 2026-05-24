@@ -14,7 +14,10 @@ export class Page<T> implements PageData<T> {
   readonly request_id: string;
   readonly #fetcher: (cursor: string) => Promise<Page<T>>;
 
-  constructor(initial: PageData<T>, fetcher: (cursor: string) => Promise<Page<T>>) {
+  constructor(
+    initial: PageData<T>,
+    fetcher: (cursor: string) => Promise<Page<T>>,
+  ) {
     this.data = initial.data;
     this.next_cursor = initial.next_cursor;
     this.has_more = initial.has_more;

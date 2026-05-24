@@ -35,10 +35,10 @@ export class DocforkError extends Error {
   }
 }
 
-export class AuthenticationError extends DocforkError {}   // 401
-export class InvalidRequestError extends DocforkError {}   // 400
-export class RateLimitError extends DocforkError {}        // 402, 429
-export class APIError extends DocforkError {}              // 5xx + anything unmapped
+export class AuthenticationError extends DocforkError {} // 401
+export class InvalidRequestError extends DocforkError {} // 400
+export class RateLimitError extends DocforkError {} // 402, 429
+export class APIError extends DocforkError {} // 5xx + anything unmapped
 
 function pickSubclass(status: number): typeof DocforkError {
   if (status === 401) return AuthenticationError;
