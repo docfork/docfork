@@ -48,7 +48,7 @@
   "scripts": {
     "generate": "tsx scripts/codegen.ts",
     "build": "pnpm generate && tsdown",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "pnpm generate && tsc --noEmit",
     "lint": "eslint .",
     "lint:check": "eslint .",
     "format": "prettier \"src/**/*.ts\" --write",
