@@ -57,8 +57,10 @@ const AUTH_DOMAIN = "login.docfork.com";
 const JWKS_URL = `https://${AUTH_DOMAIN}/oauth2/jwks`;
 const ISSUER = `https://${AUTH_DOMAIN}`;
 
+// canonical resource-server uri; tokens whose `aud` differs are rejected.
+const AUDIENCE = "https://mcp.docfork.com";
+
 // optional validation parameters (undefined = skip these checks)
-const AUDIENCE = undefined;
 const ALGORITHMS = undefined;
 const PUBLIC_KEY_PEM = undefined;
 
