@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.3](https://github.com/docfork/docfork/compare/docfork-v2.2.2...docfork-v2.2.3) (2026-05-24)
+
+
+### Bug Fixes
+
+* **mcp:** serve RFC 9728 path-aware OAuth discovery metadata ([#155](https://github.com/docfork/docfork/issues/155)) ([1cbcc9e](https://github.com/docfork/docfork/commit/1cbcc9e1f0103d0e5273fef6e017f920ec8f20e4))
+
+
+### Miscellaneous Chores
+
+* **mcp:** force docfork release to 2.2.3 ([#157](https://github.com/docfork/docfork/issues/157)) ([0e85c46](https://github.com/docfork/docfork/commit/0e85c46c2d1266a3456e576f3049e17f63ae4f96))
+* **sdk:** force first release to 0.0.1 ([#146](https://github.com/docfork/docfork/issues/146)) ([c8626af](https://github.com/docfork/docfork/commit/c8626afa5a0402f5723a68942c2cfc373094567c))
+
 ## [2.2.2](https://github.com/docfork/docfork/compare/docfork-v2.2.1...docfork-v2.2.2) (2026-05-18)
 
 
