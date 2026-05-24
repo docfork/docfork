@@ -36,17 +36,39 @@ function isWellKnownMcpConfigPath(pathname: string): boolean {
 
 function isWellKnownOauthProtectedResourcePath(pathname: string): boolean {
   const normalized = normalizePathname(pathname);
+  const segment = "/.well-known/oauth-protected-resource";
   return (
-    normalized === "/.well-known/oauth-protected-resource" ||
-    normalized.endsWith("/.well-known/oauth-protected-resource")
+    normalized === segment ||
+    // path-insertion form: /mcp/.well-known/oauth-protected-resource
+    normalized.endsWith(segment) ||
+    // rfc 9728 path-aware form: /.well-known/oauth-protected-resource/mcp
+    normalized.startsWith(`${segment}/`)
   );
 }
 
 function isWellKnownOauthAuthorizationServerPath(pathname: string): boolean {
   const normalized = normalizePathname(pathname);
+  const segment = "/.well-known/oauth-authorization-server";
   return (
-    normalized === "/.well-known/oauth-authorization-server" ||
-    normalized.endsWith("/.well-known/oauth-authorization-server")
+    normalized === segment ||
+    // path-insertion form: /mcp/.well-known/oauth-authorization-server
+    normalized.endsWith(segment) ||
+    // rfc 8414 path-aware form: /.well-known/oauth-authorization-server/mcp
+    normalized.startsWith(`${segment}/`)
+  );
+}
+
+/**
+ * well-known discovery paths must win over the /mcp endpoint matcher: the
+ * rfc 9728 form (/.well-known/oauth-protected-resource/mcp) ends with "/mcp",
+ * so isMcpEndpointPath would otherwise swallow it into the transport handler
+ * (→ 406/401 instead of metadata json).
+ */
+function isWellKnownDiscoveryPath(pathname: string): boolean {
+  return (
+    isWellKnownMcpConfigPath(pathname) ||
+    isWellKnownOauthProtectedResourcePath(pathname) ||
+    isWellKnownOauthAuthorizationServerPath(pathname)
   );
 }
 
@@ -211,7 +233,13 @@ export async function startHttpServer(
     }
 
     try {
-      if (isMcpEndpointPath(pathname) || isMcpOauthEndpointPath(pathname)) {
+      // discovery paths win over the /mcp matcher: the rfc 9728 path-aware form
+      // (/.well-known/oauth-protected-resource/mcp) ends with "/mcp" and would
+      // otherwise be swallowed into the transport handler (→ 406/401).
+      if (
+        !isWellKnownDiscoveryPath(pathname) &&
+        (isMcpEndpointPath(pathname) || isMcpOauthEndpointPath(pathname))
+      ) {
         // /mcp stays anonymous, /mcp/oauth requires auth
         const requireAuth = isMcpOauthEndpointPath(pathname);
         let authConfig: DocforkAuthConfig;
