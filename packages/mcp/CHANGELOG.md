@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.4](https://github.com/docfork/docfork/compare/docfork-v2.2.3...docfork-v2.2.4) (2026-05-24)
+
+
+### Bug Fixes
+
+* **mcp:** validate token audience (aud) in jwt verification ([#161](https://github.com/docfork/docfork/issues/161)) ([77e4319](https://github.com/docfork/docfork/commit/77e43198ee00636e1339b3b29841c9f3cfc9f0ff))
+
 ## [2.2.3](https://github.com/docfork/docfork/compare/docfork-v2.2.2...docfork-v2.2.3) (2026-05-24)
 
 
