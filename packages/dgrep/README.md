@@ -22,7 +22,7 @@ dgrep init                                                              # detect
 dgrep search "server-side rendering with App Router"                    # search tracked libraries
 dgrep search "middleware redirect based on authentication" -l vercel/next.js  # search a specific library
 dgrep read https://nextjs.org/docs/app/building-your-application/routing/middleware
-dgrep setup                                                             # wire into Cursor, Claude Code, OpenCode
+dgrep setup                                                             # wire the MCP server into your IDE agents
 ```
 
 dgrep provisions keys automatically on first search. No API key required.
@@ -45,7 +45,7 @@ dgrep provisions keys automatically on first search. No API key required.
 | `dgrep add <library>`    | Add a library to your stack                                      |
 | `dgrep remove <library>` | Remove a library from tracking                                   |
 | `dgrep list`             | List tracked libraries                                           |
-| `dgrep setup`            | Install the Docfork MCP server in your IDE (Cursor, Claude Code, OpenCode) |
+| `dgrep setup`            | Install the Docfork MCP server in your IDE agents (use `--agent` to target one) |
 | `dgrep status`           | Show configuration and authentication state                      |
 | `dgrep login`            | Log in to your Docfork account                                   |
 | `dgrep logout`           | Log out and clear credentials                                    |

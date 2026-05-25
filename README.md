@@ -7,7 +7,7 @@
     </picture>
   </a>
 </p>
-<p align="center">Context for AI Coding Agents.</p>
+<p align="center">Up-to-date docs for AI coding agents.</p>
 
 <p align="center">
   <a href="https://docfork.com"><img alt="Website" src="https://img.shields.io/badge/Website-docfork.com-blue?style=flat-square" /></a>&nbsp;&nbsp;<a href="https://www.npmjs.com/package/docfork"><img alt="npm" src="https://img.shields.io/npm/v/docfork?style=flat-square&color=red" /></a>&nbsp;&nbsp;<a href="https://www.npmjs.com/package/docfork"><img alt="npm downloads" src="https://img.shields.io/npm/dm/docfork?style=flat-square" /></a>&nbsp;&nbsp;<a href="https://github.com/docfork/docfork"><img alt="GitHub stars" src="https://img.shields.io/github/stars/docfork/docfork?style=flat-square" /></a>
@@ -36,10 +36,10 @@ AI agents hallucinate APIs, bloat context with stale docs, and write code agains
 ## Get Started
 
 ```bash
-npx dgrep setup --cursor
+npx dgrep setup
 ```
 
-Installs the Docfork MCP server in your IDE. Detects your dependencies, provisions an API key, and writes the config file. Also supports `--claude` and `--opencode`.
+Installs the Docfork MCP server in your IDE. Detects your installed agents and writes the config file; sign in to Docfork on first use, no API key needed. Target one with `--agent claude-code` (also: cursor, codex, opencode, vscode, windsurf, amp, factory, zed).
 
 Your agent now has two tools:
 
@@ -90,7 +90,7 @@ Share API keys and [Cabinets](https://docfork.com/docs/cabinets) across your org
 ## MCP Setup
 
 > [!TIP]
-> Run `npx dgrep setup --cursor` (or `--claude`, `--opencode`) to install automatically. Manual config below for other clients.
+> Run `npx dgrep setup` to install automatically (use `--agent claude-code` to target one). Manual config below for other clients.
 
 **Cursor** — <a href="https://cursor.com/en/install-mcp?name=docfork&config=eyJ1cmwiOiJodHRwczovL21jcC5kb2Nmb3JrLmNvbS9tY3AifQ%3D%3D"><img src="https://cursor.com/deeplink/mcp-install-dark.svg" height="20" alt="Add to Cursor"/></a>
 
