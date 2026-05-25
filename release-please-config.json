@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "release-type": "node",
+  "last-release-sha": "36ebfd9e225561197603142978fc56ef54b0c959",
   "include-component-in-tag": true,
   "include-v-in-tag": true,
   "separate-pull-requests": true,
@@ -29,6 +30,9 @@
       "changelog-path": "CHANGELOG.md",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true
+    },
+    "packages/sdk": {
+      "changelog-path": "CHANGELOG.md"
     }
   }
 }

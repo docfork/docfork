@@ -4,6 +4,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { DocforkAuthConfig, resolveAuthConfig, authContext } from "./config.js";
 import { isJwt, validateJwt, shouldTrustProxyHeaders } from "./lib/jwt.js";
+import { captureMcpInitialize } from "./lib/analytics.js";
 
 const maxRequestBodyBytes = 1_000_000;
 
@@ -35,17 +36,39 @@ function isWellKnownMcpConfigPath(pathname: string): boolean {
 
 function isWellKnownOauthProtectedResourcePath(pathname: string): boolean {
   const normalized = normalizePathname(pathname);
+  const segment = "/.well-known/oauth-protected-resource";
   return (
-    normalized === "/.well-known/oauth-protected-resource" ||
-    normalized.endsWith("/.well-known/oauth-protected-resource")
+    normalized === segment ||
+    // path-insertion form: /mcp/.well-known/oauth-protected-resource
+    normalized.endsWith(segment) ||
+    // rfc 9728 path-aware form: /.well-known/oauth-protected-resource/mcp
+    normalized.startsWith(`${segment}/`)
   );
 }
 
 function isWellKnownOauthAuthorizationServerPath(pathname: string): boolean {
   const normalized = normalizePathname(pathname);
+  const segment = "/.well-known/oauth-authorization-server";
   return (
-    normalized === "/.well-known/oauth-authorization-server" ||
-    normalized.endsWith("/.well-known/oauth-authorization-server")
+    normalized === segment ||
+    // path-insertion form: /mcp/.well-known/oauth-authorization-server
+    normalized.endsWith(segment) ||
+    // rfc 8414 path-aware form: /.well-known/oauth-authorization-server/mcp
+    normalized.startsWith(`${segment}/`)
+  );
+}
+
+/**
+ * well-known discovery paths must win over the /mcp endpoint matcher: the
+ * rfc 9728 form (/.well-known/oauth-protected-resource/mcp) ends with "/mcp",
+ * so isMcpEndpointPath would otherwise swallow it into the transport handler
+ * (→ 406/401 instead of metadata json).
+ */
+function isWellKnownDiscoveryPath(pathname: string): boolean {
+  return (
+    isWellKnownMcpConfigPath(pathname) ||
+    isWellKnownOauthProtectedResourcePath(pathname) ||
+    isWellKnownOauthAuthorizationServerPath(pathname)
   );
 }
 
@@ -102,6 +125,41 @@ async function parseRequestBody(req: IncomingMessage): Promise<any> {
     });
     req.on("error", reject);
   });
+}
+
+/**
+ * validate the Origin header for dns-rebinding protection (mcp 2025-11-25).
+ * no Origin (cli clients) is allowed; only browser-set origins are policed.
+ */
+function isOriginAllowed(origin: string | undefined): boolean {
+  // cli clients (claude code, cursor, inspector proxy) send no Origin
+  if (!origin || origin === "null") return true;
+
+  const configured = (process.env.DOCFORK_ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+  // escape hatch: disable the check entirely
+  if (configured.includes("*")) return true;
+
+  let hostname: string;
+  try {
+    hostname = new URL(origin).hostname;
+  } catch {
+    // malformed Origin is invalid
+    return false;
+  }
+
+  // localhost / loopback (any scheme, any port) for inspector + local dev
+  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1") {
+    return true;
+  }
+  // docfork's own surfaces
+  if (hostname === "docfork.com" || hostname.endsWith(".docfork.com")) {
+    return true;
+  }
+  // exact-match env allowlist
+  return configured.includes(origin);
 }
 
 /**
@@ -210,22 +268,42 @@ export async function startHttpServer(
     }
 
     try {
-      if (isMcpEndpointPath(pathname) || isMcpOauthEndpointPath(pathname)) {
+      // discovery paths win over the /mcp matcher: the rfc 9728 path-aware form
+      // (/.well-known/oauth-protected-resource/mcp) ends with "/mcp" and would
+      // otherwise be swallowed into the transport handler (→ 406/401).
+      if (
+        !isWellKnownDiscoveryPath(pathname) &&
+        (isMcpEndpointPath(pathname) || isMcpOauthEndpointPath(pathname))
+      ) {
         // /mcp stays anonymous, /mcp/oauth requires auth
         const requireAuth = isMcpOauthEndpointPath(pathname);
         let authConfig: DocforkAuthConfig;
         try {
           const userAgent =
             typeof req.headers["user-agent"] === "string" ? req.headers["user-agent"] : undefined;
+          // DNT=1 or X-Docfork-Telemetry=0 opts the caller out of telemetry per-request
+          const dnt = req.headers["dnt"];
+          const dfTelemetry = req.headers["x-docfork-telemetry"];
+          const telemetryOptOut =
+            (typeof dnt === "string" && dnt === "1") ||
+            (typeof dfTelemetry === "string" && dfTelemetry === "0");
           authConfig = {
             ...extractAuthConfigFromRequest(req),
             clientIp: getClientIp(req),
             // forward client user-agent to api for attribution and debugging
             clientInfo: userAgent,
             transport: "http",
+            telemetryOptOut,
           };
         } catch (error: any) {
           sendJsonError(res, 400, -32602, error.message || "Invalid configuration");
+          return;
+        }
+
+        // dns-rebinding protection: reject browser-set origins not on the allowlist
+        const origin = typeof req.headers.origin === "string" ? req.headers.origin : undefined;
+        if (!isOriginAllowed(origin)) {
+          sendJsonError(res, 403, -32001, "Origin not allowed");
           return;
         }
 
@@ -285,11 +363,20 @@ export async function startHttpServer(
         }
 
         try {
-          // Only log client info on first connection (initialize request)
+          // log + capture client info on initialize handshake
           const isInitialize = requestBody?.method === "initialize";
           if (isInitialize) {
             const clientType = detectClientType(requestBody);
             console.log(`Client info: ${clientType}`);
+            captureMcpInitialize({
+              apiKey: authConfig.apiKey,
+              clientIp: authConfig.clientIp,
+              clientInfoHeader: authConfig.clientInfo,
+              rawClientInfo: requestBody?.params?.clientInfo,
+              protocolVersion: requestBody?.params?.protocolVersion,
+              transport: "http",
+              optOut: authConfig.telemetryOptOut,
+            });
           }
 
           const serverFactory = standardServerFactory;

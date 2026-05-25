@@ -1,0 +1,77 @@
+{
+  "name": "@docfork/sdk",
+  "version": "0.0.1",
+  "description": "Official TypeScript SDK for the Docfork API. Index, search, and read documentation for AI coding agents.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Docfork",
+  "homepage": "https://docfork.com/docs/sdk",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/docfork/docfork.git",
+    "directory": "packages/sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/docfork/docfork/issues"
+  },
+  "keywords": [
+    "docfork",
+    "sdk",
+    "documentation",
+    "ai",
+    "agents",
+    "llm"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "generate": "tsx scripts/codegen.ts",
+    "build": "pnpm generate && tsdown",
+    "typecheck": "pnpm generate && tsc --noEmit",
+    "lint": "eslint .",
+    "lint:check": "eslint .",
+    "format": "prettier \"src/**/*.ts\" --write",
+    "format:check": "prettier \"src/**/*.ts\" --check",
+    "test": "vitest run",
+    "clean": "rm -rf dist src/gen",
+    "preversion": "pnpm lint:check && pnpm typecheck && pnpm build",
+    "prepublishOnly": "pnpm build"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "0.17.4",
+    "@eslint/js": "9.39.2",
+    "@hey-api/openapi-ts": "^0.97.2",
+    "@types/node": "^25.9.1",
+    "eslint": "9.39.2",
+    "eslint-plugin-n": "^18.0.1",
+    "prettier": "^3.8.1",
+    "publint": "^0.3.21",
+    "tsdown": "^0.22.0",
+    "tsx": "^4.22.3",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.4",
+    "unrun": "^0.3.0",
+    "vitest": "^3"
+  }
+}

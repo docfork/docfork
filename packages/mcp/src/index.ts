@@ -18,6 +18,39 @@ import {
   getAuthConfig,
 } from "./config.js";
 import { startHttpServer, startStdioServer } from "./transport.js";
+import { captureMcpToolCall } from "./lib/analytics.js";
+
+// wrap a tool handler so every call ships to telemetry regardless of transport
+function instrumentTool<TArgs, TResult>(
+  toolName: string,
+  handler: (args: TArgs) => Promise<TResult>
+): (args: TArgs) => Promise<TResult> {
+  return async (args: TArgs) => {
+    const auth = getAuthConfig();
+    try {
+      const result = await handler(args);
+      captureMcpToolCall({
+        apiKey: auth?.apiKey,
+        clientIp: auth?.clientIp,
+        clientInfoHeader: auth?.clientInfo,
+        toolName,
+        transport: auth?.transport === "http" ? "http" : "stdio",
+        optOut: auth?.telemetryOptOut,
+      });
+      return result;
+    } catch (e) {
+      captureMcpToolCall({
+        apiKey: auth?.apiKey,
+        clientIp: auth?.clientIp,
+        clientInfoHeader: auth?.clientInfo,
+        toolName,
+        transport: auth?.transport === "http" ? "http" : "stdio",
+        optOut: auth?.telemetryOptOut,
+      });
+      throw e;
+    }
+  };
+}
 
 /**
  * Create and configure the standard MCP server
@@ -89,7 +122,7 @@ Usage:
         readOnlyHint: true,
       },
     },
-    async ({ query, tokens, library }): Promise<CallToolResult> => {
+    instrumentTool("search_docs", async ({ query, tokens, library }): Promise<CallToolResult> => {
       const authConfig = getAuthConfig();
       const tokensParam =
         typeof tokens === "number" ? String(tokens) : (tokens as string | undefined);
@@ -130,7 +163,7 @@ Usage:
           },
         ],
       };
-    }
+    })
   );
 
   // register docfork fetch doc tool
@@ -157,7 +190,7 @@ Retrieve full documentation content from a URL and return it as rendered markdow
         readOnlyHint: true,
       },
     },
-    async (args): Promise<CallToolResult> => {
+    instrumentTool("fetch_doc", async (args): Promise<CallToolResult> => {
       const inputValue = args.url as string;
       const authConfig = getAuthConfig();
       const response = await readUrl(inputValue, authConfig);
@@ -169,7 +202,7 @@ Retrieve full documentation content from a URL and return it as rendered markdow
           },
         ],
       };
-    }
+    })
   );
 
   // Error handler

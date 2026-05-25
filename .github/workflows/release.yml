@@ -1,10 +1,13 @@
 # This workflow publishes packages to npm when a GitHub release is published.
 # release-please creates GitHub Releases automatically from conventional commits.
-# Tag patterns: docfork-vX.Y.Z (MCP server), dgrep-vX.Y.Z (CLI)
+# Tag patterns: docfork-vX.Y.Z (MCP server), dgrep-vX.Y.Z (CLI), sdk-vX.Y.Z (TypeScript SDK).
 #
 # Auth: OIDC trusted publishing (no npm tokens). Requires npm >= 11.5.1,
 # id-token: write, and trusted publisher configured on npmjs.com for each package.
 # Do NOT set NODE_AUTH_TOKEN or registry-url — both interfere with OIDC.
+#
+# Filename is part of the OIDC trusted-publisher contract. Renaming this file
+# requires updating the trusted-publisher config on npmjs.com for every package.
 
 name: Release
 
@@ -146,4 +149,42 @@ jobs:
         if: ${{ github.event.release.prerelease }}
         run: |
           cd packages/dgrep
+          npx npm@latest publish --access public --provenance --tag=beta
+
+  # -- TypeScript SDK (@docfork/sdk) -----------------------
+  publish_sdk:
+    if: startsWith(github.event.release.tag_name, 'sdk-v')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build SDK
+        run: pnpm --filter @docfork/sdk build
+
+      - name: Publish to npm (stable)
+        if: ${{ !github.event.release.prerelease }}
+        run: |
+          cd packages/sdk
+          npx npm@latest publish --access public --provenance
+
+      - name: Publish to npm (pre-release)
+        if: ${{ github.event.release.prerelease }}
+        run: |
+          cd packages/sdk
           npx npm@latest publish --access public --provenance --tag=beta
