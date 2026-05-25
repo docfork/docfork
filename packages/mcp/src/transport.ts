@@ -128,6 +128,41 @@ async function parseRequestBody(req: IncomingMessage): Promise<any> {
 }
 
 /**
+ * validate the Origin header for dns-rebinding protection (mcp 2025-11-25).
+ * no Origin (cli clients) is allowed; only browser-set origins are policed.
+ */
+function isOriginAllowed(origin: string | undefined): boolean {
+  // cli clients (claude code, cursor, inspector proxy) send no Origin
+  if (!origin || origin === "null") return true;
+
+  const configured = (process.env.DOCFORK_ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+  // escape hatch: disable the check entirely
+  if (configured.includes("*")) return true;
+
+  let hostname: string;
+  try {
+    hostname = new URL(origin).hostname;
+  } catch {
+    // malformed Origin is invalid
+    return false;
+  }
+
+  // localhost / loopback (any scheme, any port) for inspector + local dev
+  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1") {
+    return true;
+  }
+  // docfork's own surfaces
+  if (hostname === "docfork.com" || hostname.endsWith(".docfork.com")) {
+    return true;
+  }
+  // exact-match env allowlist
+  return configured.includes(origin);
+}
+
+/**
  * Send JSON-RPC error response
  */
 function sendJsonError(
@@ -262,6 +297,13 @@ export async function startHttpServer(
           };
         } catch (error: any) {
           sendJsonError(res, 400, -32602, error.message || "Invalid configuration");
+          return;
+        }
+
+        // dns-rebinding protection: reject browser-set origins not on the allowlist
+        const origin = typeof req.headers.origin === "string" ? req.headers.origin : undefined;
+        if (!isOriginAllowed(origin)) {
+          sendJsonError(res, 403, -32001, "Origin not allowed");
           return;
         }
 
