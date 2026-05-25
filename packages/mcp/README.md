@@ -28,10 +28,10 @@ Documentation context as precise as your dependency lockfile:
 ### Recommended: use dgrep
 
 ```bash
-npx dgrep setup --cursor
+npx dgrep setup
 ```
 
-Installs the Docfork MCP server in your IDE. Detects your dependencies, provisions an API key, and writes the config file. Also supports `--claude` and `--opencode`.
+Installs the Docfork MCP server in your IDE. Detects your installed agents and writes the config file; sign in to Docfork on first use, no API key needed. Target one with `--agent claude-code` (also: cursor, codex, opencode, vscode, windsurf, amp, factory, zed).
 
 [dgrep docs →](https://docfork.com/docs/dgrep)
 
