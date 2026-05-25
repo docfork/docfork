@@ -65,8 +65,7 @@ export interface AgentConfig {
 
 // zed stores its settings under different home-relative paths per OS;
 // resolved once at module load
-const ZED_DIR =
-  process.platform === "darwin" ? "Library/Application Support/Zed" : ".config/zed";
+const ZED_DIR = process.platform === "darwin" ? "Library/Application Support/Zed" : ".config/zed";
 
 // -- Registry -----------------------------------
 
