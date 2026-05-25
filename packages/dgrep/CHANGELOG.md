@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/docfork/docfork/compare/dgrep-v0.2.1...dgrep-v0.2.2) (2026-05-25)
+
+
+### Features
+
+* **dgrep:** typed agent registry + OAuth-first setup + 6 editors ([#166](https://github.com/docfork/docfork/issues/166)) ([fcaefb6](https://github.com/docfork/docfork/commit/fcaefb6c52f5ffcf79e98fc5d355d00065f237c7))
+
 ## [0.2.1](https://github.com/docfork/docfork/compare/dgrep-v0.2.0...dgrep-v0.2.1) (2026-04-19)
 
 
