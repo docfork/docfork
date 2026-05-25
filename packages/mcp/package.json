@@ -1,6 +1,6 @@
 {
   "name": "docfork",
-  "version": "2.2.4",
+  "version": "2.2.5",
   "description": "Up-to-date code documentation for AI agents.",
   "mcpName": "io.github.docfork/docfork",
   "type": "module",

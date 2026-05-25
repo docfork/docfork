@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.5](https://github.com/docfork/docfork/compare/docfork-v2.2.4...docfork-v2.2.5) (2026-05-25)
+
+
+### Bug Fixes
+
+* **mcp:** return 403 on disallowed Origin header (DOC-370) ([#164](https://github.com/docfork/docfork/issues/164)) ([ba4409e](https://github.com/docfork/docfork/commit/ba4409e49c73c2a6b62bf4da6111b07a47c586bb))
+
 ## [2.2.4](https://github.com/docfork/docfork/compare/docfork-v2.2.3...docfork-v2.2.4) (2026-05-24)
 
 
