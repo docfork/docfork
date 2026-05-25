@@ -42,5 +42,8 @@
     "url": "https://github.com/docfork/docfork",
     "directory": "packages/dgrep"
   },
-  "homepage": "https://github.com/docfork/docfork#readme"
+  "homepage": "https://github.com/docfork/docfork#readme",
+  "dependencies": {
+    "smol-toml": "^1.6.1"
+  }
 }

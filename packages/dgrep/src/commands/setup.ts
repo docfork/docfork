@@ -1,17 +1,12 @@
 import { accent } from "../lib/theme.js";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
-import { resolveAuth } from "../lib/auth.js";
-import { detectAgents } from "../lib/agents.js";
+import { AGENTS, agentDisplayList, detectAgents, writeMcpConfigForAgent } from "../lib/agents.js";
 import type { DetectedAgent } from "../lib/agents.js";
-import { writeMcpConfigForAgent } from "../lib/agents.js";
 
 export interface SetupOptions {
-  cursor?: boolean;
-  claude?: boolean;
-  opencode?: boolean;
+  agents?: string[];
   yes?: boolean;
-  apiKey?: string;
   cwd?: string;
 }
 
@@ -20,31 +15,14 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 
   p.intro(accent().bg(pc.black(" dgrep setup ")));
 
-  const auth = await resolveAuth(options.apiKey);
-  const apiKey = auth.apiKey;
-
-  if (!apiKey) {
-    p.log.error(
-      `No API key found. Run ${accent().fg("dgrep login")} or ${accent().fg("npx dgrep")} first.`
-    );
-    process.exitCode = 1;
-    return;
-  }
-
   // detect agents
   const allAgents = await detectAgents(cwd);
 
-  // filter by flags if specified
-  const filterFlags = options.cursor || options.claude || options.opencode;
+  // filter to requested subset if --agent specified
   let agents: DetectedAgent[];
-
-  if (filterFlags) {
-    agents = allAgents.filter((a) => {
-      if (options.cursor && a.name === "cursor") return true;
-      if (options.claude && a.name === "claude-code") return true;
-      if (options.opencode && a.name === "opencode") return true;
-      return false;
-    });
+  if (options.agents && options.agents.length > 0) {
+    const requested = new Set(options.agents);
+    agents = allAgents.filter((a) => requested.has(a.name));
 
     if (agents.length === 0) {
       p.log.warning("Requested agents not detected in this project.");
@@ -56,7 +34,7 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
   }
 
   if (agents.length === 0) {
-    p.log.info("No IDE agents detected (Cursor, Claude Code, OpenCode).");
+    p.log.info(`No IDE agents detected (${agentDisplayList()}).`);
     p.outro("Nothing to set up.");
     return;
   }
@@ -67,7 +45,7 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
     if (!options.yes) {
       if (agent.name === "claude-code") {
         p.log.info(
-          `Or run manually:\n  ${accent().fg(`claude mcp add --transport http docfork https://mcp.docfork.com/mcp --header "DOCFORK_API_KEY: ${apiKey}"`)}`
+          `Or run manually:\n  ${accent().fg("claude mcp add --transport http docfork https://mcp.docfork.com/mcp")}`
         );
       }
 
@@ -77,9 +55,12 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
       if (!writeConfig || p.isCancel(writeConfig)) continue;
     }
 
-    await writeMcpConfigForAgent(agent, apiKey);
+    await writeMcpConfigForAgent(agent);
     p.log.success(`${agent.displayName}: ${pc.dim(agent.configPath)} updated`);
+
+    const note = AGENTS[agent.name].postWriteNote;
+    if (note) p.log.info(note);
   }
 
-  p.outro("Done. Your IDE agents can now use Docfork.");
+  p.outro("Done. Sign in to Docfork in your IDE on first use.");
 }
