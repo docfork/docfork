@@ -7,15 +7,12 @@
     </picture>
   </a>
 </p>
+
+> [!CAUTION]
+> **Docfork has shut down as of June 14, 2026.**
+> The MCP server, CLI, and all hosted endpoints are offline and will not return. API keys no longer work, and `npx dgrep setup` will fail. Thank you to everyone who used the service.
+
 <p align="center">Up-to-date docs for AI coding agents.</p>
-
-<p align="center">
-  <a href="https://docfork.com"><img alt="Website" src="https://img.shields.io/badge/Website-docfork.com-blue?style=flat-square" /></a>&nbsp;&nbsp;<a href="https://www.npmjs.com/package/docfork"><img alt="npm" src="https://img.shields.io/npm/v/docfork?style=flat-square&color=red" /></a>&nbsp;&nbsp;<a href="https://www.npmjs.com/package/docfork"><img alt="npm downloads" src="https://img.shields.io/npm/dm/docfork?style=flat-square" /></a>&nbsp;&nbsp;<a href="https://github.com/docfork/docfork"><img alt="GitHub stars" src="https://img.shields.io/github/stars/docfork/docfork?style=flat-square" /></a>
-</p>
-
-<p align="center">
-  <img src="demo.gif" alt="Docfork demo" />
-</p>
 
 AI agents hallucinate APIs, bloat context with stale docs, and write code against outdated signatures. Docfork serves up-to-date documentation directly in Cursor, Claude Code, and Windsurf.
 
